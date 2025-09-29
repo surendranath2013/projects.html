@@ -1,0 +1,292 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capital Quest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #e94560;
+      --secondary-color: #4e47e3;
+      --background-dark: #1a1a2e;
+      --background-card: #2c2c44;
+      --text-light: #ffffff;
+      --text-dark: #f0f0f0;
+      --success-color: #38a3a5;
+      --error-color: #dc3545;
+      --button-hover: #ff7f99;
+      --shadow-light: rgba(0, 0, 0, 0.25);
+      --border-radius-card: 15px;
+      --border-radius-button: 8px;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: var(--background-dark);
+      margin: 0;
+      flex-direction: column;
+      color: var(--text-light);
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .container {
+      text-align: center;
+      background-color: var(--background-card);
+      padding: 15px 20px;
+      border-radius: var(--border-radius-card);
+      box-shadow: 0 5px 20px var(--shadow-light);
+      width: 95%;
+      max-width: 550px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    h1 {
+      color: var(--primary-color);
+      margin: 0 0 10px 0;
+      font-size: 2em;
+      font-weight: 700;
+    }
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    .screen.active {
+      display: flex;
+    }
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      gap: 8px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 1em;
+      font-weight: 600;
+      background-color: var(--primary-color);
+      color: var(--text-light);
+      border: none;
+      border-radius: var(--border-radius-button);
+      cursor: pointer;
+      width: 90%;
+      max-width: 350px;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    button:hover:not(:disabled) {
+      background-color: var(--button-hover);
+      transform: translateY(-2px);
+    }
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    button:disabled {
+      background-color: #444444;
+      color: #888888;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    #question {
+      font-size: 1.4em;
+      margin: 10px 0;
+      font-weight: 600;
+    }
+    #result {
+      font-weight: 700;
+      font-size: 1.2em;
+      min-height: 25px;
+    }
+    #score-container {
+      font-size: 1.2em;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+    #result.correct { color: var(--success-color); }
+    #result.incorrect { color: var(--error-color); }
+    .level-select-container {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+    .level-select-container button {
+      width: auto;
+      padding: 8px 16px;
+      font-size: 0.9em;
+      background-color: #5d5d5d;
+    }
+    .level-select-container button.active-level {
+      background-color: var(--primary-color);
+      box-shadow: none;
+    }
+    #next-btn {
+      margin-top: 10px;
+      display: none;
+      background-color: #007bff;
+    }
+    #next-btn:hover {
+      background-color: #3399ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Capital Quest</h1>
+    <div id="start-screen" class="screen active">
+      <p>Test your knowledge of capitals! Choose a level to begin.</p>
+      <div class="level-select-container">
+        <button id="india-btn" class="active-level">Indian States</button>
+        <button id="world-btn">Countries</button>
+      </div>
+    </div>
+    <div id="game-screen" class="screen">
+      <p id="question"></p>
+      <div id="options-container" class="options-container">
+        <button class="option-btn"></button>
+        <button class="option-btn"></button>
+        <button class="option-btn"></button>
+        <button class="option-btn"></button>
+      </div>
+      <p id="result"></p>
+      <button id="next-btn">Next Question</button>
+      <div id="score-container">
+        <p>Score: <span id="score">0</span></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const capitals = {
+      "indiaStates": {
+        "Andhra Pradesh": "Amaravati", "Arunachal Pradesh": "Itanagar", "Assam": "Dispur", "Bihar": "Patna", "Chhattisgarh": "Raipur", "Goa": "Panaji", "Gujarat": "Gandhinagar", "Haryana": "Chandigarh", "Himachal Pradesh": "Shimla", "Jharkhand": "Ranchi", "Karnataka": "Bengaluru", "Kerala": "Thiruvananthapuram", "Madhya Pradesh": "Bhopal", "Maharashtra": "Mumbai", "Manipur": "Imphal", "Meghalaya": "Shillong", "Mizoram": "Aizawl", "Nagaland": "Kohima", "Odisha": "Bhubaneswar", "Punjab": "Chandigarh", "Rajasthan": "Jaipur", "Sikkim": "Gangtok", "Tamil Nadu": "Chennai", "Telangana": "Hyderabad", "Tripura": "Agartala", "Uttar Pradesh": "Lucknow", "Uttarakhand": "Dehradun", "West Bengal": "Kolkata"
+      },
+      "worldCountries": {
+        "Afghanistan": "Kabul", "Albania": "Tirana", "Algeria": "Algiers", "Andorra": "Andorra la Vella", "Angola": "Luanda", "Antigua and Barbuda": "Saint John's", "Argentina": "Buenos Aires", "Armenia": "Yerevan", "Australia": "Canberra", "Austria": "Vienna", "Azerbaijan": "Baku", "Bahamas": "Nassau", "Bahrain": "Manama", "Bangladesh": "Dhaka", "Barbados": "Bridgetown", "Belarus": "Minsk", "Belgium": "Brussels", "Belize": "Belmopan", "Benin": "Porto-Novo", "Bhutan": "Thimphu", "Bolivia": "Sucre", "Bosnia and Herzegovina": "Sarajevo", "Botswana": "Gaborone", "Brazil": "Brasilia", "Brunei": "Bandar Seri Begawan", "Bulgaria": "Sofia", "Burkina Faso": "Ouagadougou", "Burundi": "Gitega", "Cabo Verde": "Praia", "Cambodia": "Phnom Penh", "Cameroon": "Yaounde", "Canada": "Ottawa", "Central African Republic": "Bangui", "Chad": "N'Djamena", "Chile": "Santiago", "China": "Beijing", "Colombia": "Bogota", "Comoros": "Moroni", "Congo, Democratic Republic of the": "Kinshasa", "Congo, Republic of the": "Brazzaville", "Costa Rica": "San Jose", "Cote d'Ivoire": "Yamoussoukro", "Croatia": "Zagreb", "Cuba": "Havana", "Cyprus": "Nicosia", "Czechia": "Prague", "Denmark": "Copenhagen", "Djibouti": "Djibouti", "Dominica": "Roseau", "Dominican Republic": "Santo Domingo", "Ecuador": "Quito", "Egypt": "Cairo", "El Salvador": "San Salvador", "Equatorial Guinea": "Malabo", "Eritrea": "Asmara", "Estonia": "Tallinn", "Eswatini": "Mbabane", "Ethiopia": "Addis Ababa", "Fiji": "Suva", "Finland": "Helsinki", "France": "Paris", "Gabon": "Libreville", "Gambia": "Banjul", "Georgia": "Tbilisi", "Germany": "Berlin", "Ghana": "Accra", "Greece": "Athens", "Grenada": "Saint George's", "Guatemala": "Guatemala City", "Guinea": "Conakry", "Guinea-Bissau": "Bissau", "Guyana": "Georgetown", "Haiti": "Port-au-Prince", "Honduras": "Tegucigalpa", "Hungary": "Budapest", "Iceland": "Reykjavik", "India": "New Delhi", "Indonesia": "Jakarta", "Iran": "Tehran", "Iraq": "Baghdad", "Ireland": "Dublin", "Israel": "Jerusalem", "Italy": "Rome", "Jamaica": "Kingston", "Japan": "Tokyo", "Jordan": "Amman", "Kazakhstan": "Nur-Sultan", "Kenya": "Nairobi", "Kiribati": "South Tarawa", "Korea, North": "Pyongyang", "Korea, South": "Seoul", "Kosovo": "Pristina", "Kuwait": "Kuwait City", "Kyrgyzstan": "Bishkek", "Laos": "Vientiane", "Latvia": "Riga", "Lebanon": "Beirut", "Lesotho": "Maseru", "Liberia": "Monrovia", "Libya": "Tripoli", "Liechtenstein": "Vaduz", "Lithuania": "Vilnius", "Luxembourg": "Luxembourg", "Madagascar": "Antananarivo", "Malawi": "Lilongwe", "Malaysia": "Kuala Lumpur", "Maldives": "Male", "Mali": "Bamako", "Malta": "Valletta", "Marshall Islands": "Majuro", "Mauritania": "Nouakchott", "Mauritius": "Port Louis", "Mexico": "Mexico City", "Micronesia": "Palikir", "Moldova": "Chisinau", "Monaco": "Monaco", "Mongolia": "Ulaanbaatar", "Montenegro": "Podgorica", "Morocco": "Rabat", "Mozambique": "Maputo", "Myanmar": "Naypyidaw", "Namibia": "Windhoek", "Nauru": "Yaren", "Nepal": "Kathmandu", "Netherlands": "Amsterdam", "New Zealand": "Wellington", "Nicaragua": "Managua", "Niger": "Niamey", "Nigeria": "Abuja", "North Macedonia": "Skopje", "Norway": "Oslo", "Oman": "Muscat", "Pakistan": "Islamabad", "Palau": "Ngerulmud", "Palestine": "Ramallah", "Panama": "Panama City", "Papua New Guinea": "Port Moresby", "Paraguay": "Asuncion", "Peru": "Lima", "Philippines": "Manila", "Poland": "Warsaw", "Portugal": "Lisbon", "Qatar": "Doha", "Romania": "Bucharest", "Russia": "Moscow", "Rwanda": "Kigali", "Saint Kitts and Nevis": "Basseterre", "Saint Lucia": "Castries", "Saint Vincent and the Grenadines": "Kingstown", "Samoa": "Apia", "San Marino": "San Marino", "Sao Tome and Principe": "Sao Tome", "Saudi Arabia": "Riyadh", "Senegal": "Dakar", "Serbia": "Belgrade", "Seychelles": "Victoria", "Sierra Leone": "Freetown", "Singapore": "Singapore", "Slovakia": "Bratislava", "Slovenia": "Ljubljana", "Solomon Islands": "Honiara", "Somalia": "Mogadishu", "South Africa": "Pretoria", "South Sudan": "Juba", "Spain": "Madrid", "Sri Lanka": "Sri Jayawardenepura Kotte", "Sudan": "Khartoum", "Suriname": "Paramaribo", "Sweden": "Stockholm", "Switzerland": "Bern", "Syria": "Damascus", "Taiwan": "Taipei", "Tajikistan": "Dushanbe", "Tanzania": "Dodoma", "Thailand": "Bangkok", "Timor-Leste": "Dili", "Togo": "Lome", "Tonga": "Nuku'alofa", "Trinidad and Tobago": "Port of Spain", "Tunisia": "Tunis", "Turkey": "Ankara", "Turkmenistan": "Ashgabat", "Tuvalu": "Funafuti", "Uganda": "Kampala", "Ukraine": "Kyiv", "United Arab Emirates": "Abu Dhabi", "United Kingdom": "London", "United States": "Washington, D.C.", "Uruguay": "Montevideo", "Uzbekistan": "Tashkent", "Vanuatu": "Port Vila", "Vatican City": "Vatican City", "Venezuela": "Caracas", "Vietnam": "Hanoi", "Yemen": "Sana'a", "Zambia": "Lusaka", "Zimbabwe": "Harare"
+      }
+    };
+
+    let currentLevel = "indiaStates";
+    let countries = [];
+    let currentCountry = "";
+    let score = 0;
+
+    // Elements
+    const startScreen = document.getElementById("start-screen");
+    const gameScreen = document.getElementById("game-screen");
+    const indiaBtn = document.getElementById("india-btn");
+    const worldBtn = document.getElementById("world-btn");
+    const questionElement = document.getElementById("question");
+    const optionsContainer = document.getElementById("options-container");
+    const optionButtons = document.querySelectorAll(".option-btn");
+    const resultElement = document.getElementById("result");
+    const scoreElement = document.getElementById("score");
+    const nextBtn = document.getElementById("next-btn");
+
+    function showScreen(screen) {
+      startScreen.classList.remove('active');
+      gameScreen.classList.remove('active');
+      screen.classList.add('active');
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function generateOptions() {
+      const correctAnswer = capitals[currentLevel][currentCountry];
+      const allCapitals = Object.values(capitals[currentLevel]);
+      let options = [correctAnswer];
+
+      while (options.length < 4) {
+        const randomCapital = allCapitals[Math.floor(Math.random() * allCapitals.length)];
+        if (!options.includes(randomCapital)) {
+          options.push(randomCapital);
+        }
+      }
+      shuffleArray(options);
+
+      optionButtons.forEach((button, index) => {
+        button.textContent = options[index];
+        button.disabled = false;
+        button.style.backgroundColor = 'var(--primary-color)';
+      });
+    }
+
+    function startGame(level) {
+      currentLevel = level;
+      countries = Object.keys(capitals[currentLevel]);
+      shuffleArray(countries);
+      score = 0;
+      scoreElement.textContent = score;
+      showScreen(gameScreen);
+      newQuestion();
+    }
+
+    function newQuestion() {
+      currentCountry = countries[Math.floor(Math.random() * countries.length)];
+      questionElement.textContent = `What is the capital of ${currentCountry}?`;
+      resultElement.textContent = "";
+      resultElement.className = '';
+      nextBtn.style.display = "none";
+      generateOptions();
+    }
+
+    function checkAnswer(event) {
+      const selectedButton = event.target;
+      const userAnswer = selectedButton.textContent;
+      const correctAnswer = capitals[currentLevel][currentCountry];
+      optionButtons.forEach(button => button.disabled = true);
+
+      if (userAnswer === correctAnswer) {
+        resultElement.textContent = "Correct! ✅";
+        resultElement.classList.add('correct');
+        selectedButton.style.backgroundColor = 'var(--success-color)';
+        score++;
+      } else {
+        resultElement.textContent = `Incorrect. The correct answer is ${correctAnswer}. ❌`;
+        resultElement.classList.add('incorrect');
+        selectedButton.style.backgroundColor = 'var(--error-color)';
+        optionButtons.forEach(button => {
+          if (button.textContent === correctAnswer) {
+            button.style.backgroundColor = 'var(--success-color)';
+          }
+        });
+      }
+
+      scoreElement.textContent = score;
+      nextBtn.style.display = "block";
+    }
+
+    indiaBtn.addEventListener("click", () => {
+      indiaBtn.classList.add('active-level');
+      worldBtn.classList.remove('active-level');
+      startGame("indiaStates");
+    });
+
+    worldBtn.addEventListener("click", () => {
+      worldBtn.classList.add('active-level');
+      indiaBtn.classList.remove('active-level');
+      startGame("worldCountries");
+    });
+
+    optionButtons.forEach(button => {
+      button.addEventListener("click", checkAnswer);
+    });
+
+    nextBtn.addEventListener("click", newQuestion);
+  </script>
+</body>
+</html>
