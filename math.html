@@ -1,0 +1,487 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Rush</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-color 0.5s ease;
+            position: relative;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 500px;
+            background: linear-gradient(135deg, #FF6B6B, #FFD166, #06D6A0, #118AB2, #073B4C);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2rem; /* Reduced padding from 2.5rem */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.3s ease-in-out;
+            position: relative;
+            min-height: 450px; /* Set a minimum height to prevent collapse and ensure content fits */
+            justify-content: space-between; /* Distribute space in column */
+        }
+
+        .game-container:hover {
+            transform: translateY(-5px);
+        }
+
+        .header-controls {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem; /* Reduced margin */
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 1.5rem; /* Reduced margin */
+            margin-top: 0;
+        }
+
+        .problem-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1.5rem; /* Reduced margin */
+            min-height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 0; /* Changed to 0 to prevent it from growing too much */
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem; /* Reduced gap */
+            width: 100%;
+            margin-bottom: 1rem; /* Reduced margin */
+        }
+
+        .option-button {
+            padding: 0.8rem; /* Reduced padding */
+            font-size: 1.2rem; /* Slightly reduced font size */
+            font-weight: 700;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: none;
+            outline: none;
+        }
+
+        .option-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .option-button:active {
+            transform: translateY(0);
+        }
+        
+        .option-button.correct {
+            background-color: #10b981;
+        }
+
+        .option-button.incorrect {
+            background-color: #ef4444;
+        }
+
+        .message-box {
+            min-height: 2rem; /* Reduced min-height */
+            font-size: 0.9rem; /* Slightly reduced font size */
+            font-weight: 700;
+            margin-bottom: 1rem; /* Reduced margin */
+            color: #ffffff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            display: flex; /* Ensure it's a flex container for centering */
+            align-items: center; /* Center content vertically */
+            justify-content: center; /* Center content horizontally */
+        }
+
+        .message-box.correct {
+            color: #10b981;
+        }
+
+        .message-box.incorrect {
+            color: #ef4444;
+        }
+
+        .start-button, .pause-button, .next-button {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            background-color: #3b82f6;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: none;
+            outline: none;
+            margin-top: 1rem;
+        }
+
+        .start-button:hover, .pause-button:hover, .next-button:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .start-button:active, .pause-button:active, .next-button:active {
+            transform: translateY(0);
+        }
+
+        .timer-select-container {
+            margin-bottom: 1.5rem; /* Reduced margin */
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .timer-select {
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border: 2px solid #e2e8f0;
+            background-color: #ffffff;
+            outline: none;
+            color: #000;
+        }
+
+        .controls-container {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            gap: 1rem;
+            margin-top: 0.5rem; /* Reduced margin */
+        }
+
+        .next-button {
+            background-color: #22c55e;
+            width: auto;
+            padding: 0.75rem 1.5rem;
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background-color: #1f2937;
+        }
+
+        body.dark-mode .game-container {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+        
+        body.dark-mode .header-controls, body.dark-mode .game-title, body.dark-mode .problem-text, body.dark-mode .message-box, body.dark-mode .timer-select-container {
+            color: #f9fafb;
+        }
+
+        body.dark-mode .option-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f9fafb;
+        }
+
+        body.dark-mode .option-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        #mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            z-index: 10;
+        }
+        
+        #mode-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .header-controls .pause-button {
+            width: auto;
+            margin-top: 0;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+        }
+
+        /* Start Screen Layout */
+        #start-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 2.5rem 0;
+            flex-grow: 1; /* Allow it to grow to fill space */
+        }
+        #start-screen .game-title {
+            margin-bottom: 2rem; /* Standard margin for title on start screen */
+        }
+        #start-screen .timer-select-container {
+            margin-bottom: 1.5rem; /* Standard margin for select on start screen */
+        }
+        #start-screen .start-button {
+            margin-top: 0; /* Reset specific margin */
+        }
+        
+        /* Game Play layout - distribute space more evenly */
+        #game-play {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Distribute space vertically */
+            width: 100%;
+            height: 100%; /* Ensure it takes full height of container */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<button id="mode-toggle">☀️</button>
+
+<div class="game-container">
+    <div class="game-title">Math Rush</div> <div id="start-screen">
+        <div class="timer-select-container">
+            <label for="timer-select">Select Time:</label>
+            <select id="timer-select" class="timer-select">
+                <option value="60">1 Minute</option>
+                <option value="120">2 Minutes</option>
+                <option value="180">3 Minutes</option>
+                <option value="240">4 Minutes</option>
+                <option value="300">5 Minutes</option>
+            </select>
+        </div>
+        <button id="start-button" class="start-button">Start Game</button>
+    </div>
+
+    <div id="game-play" style="display:none;">
+        <div class="header-controls">
+            <span>Score: <span id="game-score">0</span></span>
+            <button id="pause-button" class="pause-button">Pause</button>
+            <span>Time: <span id="game-time">20</span>s</span>
+        </div>
+        <div class="problem-text" id="problem"></div>
+        <div class="options-container" id="options-container"></div>
+        <div id="message-box" class="message-box"></div>
+        <div class="controls-container">
+            <button id="next-button" class="next-button">Next Question</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const problemElement = document.getElementById('problem');
+    const optionsContainer = document.getElementById('options-container');
+    const scoreElement = document.getElementById('game-score');
+    const timeElement = document.getElementById('game-time');
+    const messageBox = document.getElementById('message-box');
+    const startButton = document.getElementById('start-button');
+    const timerSelect = document.getElementById('timer-select');
+    const startScreen = document.getElementById('start-screen');
+    const gamePlay = document.getElementById('game-play');
+    const modeToggle = document.getElementById('mode-toggle');
+    const pauseButton = document.getElementById('pause-button');
+    const nextButton = document.getElementById('next-button');
+
+    let score = 0;
+    let timer = 20;
+    let currentProblem = {};
+    let timerInterval;
+    let isPaused = false;
+
+    function generateProblem() {
+        const num1 = Math.floor(Math.random() * 20) + 5;
+        const num2 = Math.floor(Math.random() * 20) + 5;
+        
+        const operators = ['+', '-', '*'];
+        const operator = operators[Math.floor(Math.random() * operators.length)];
+
+        let answer;
+        let problemText;
+        switch(operator) {
+            case '+':
+                answer = num1 + num2;
+                problemText = `${num1} + ${num2}`;
+                break;
+            case '-':
+                answer = num1 - num2;
+                problemText = `${num1} - ${num2}`;
+                break;
+            case '*':
+                answer = num1 * num2;
+                problemText = `${num1} x ${num2}`;
+                break;
+        }
+
+        currentProblem = {
+            answer: answer
+        };
+        problemElement.textContent = problemText;
+        messageBox.textContent = '';
+        generateOptions(answer);
+    }
+
+    function generateOptions(correctAnswer) {
+        let options = new Set();
+        options.add(correctAnswer);
+
+        while (options.size < 4) {
+            let distractor = correctAnswer + Math.floor(Math.random() * 20) - 10;
+            if (distractor !== correctAnswer && distractor >= 0) {
+                options.add(distractor);
+            }
+        }
+        
+        let shuffledOptions = Array.from(options).sort(() => Math.random() - 0.5);
+
+        optionsContainer.innerHTML = '';
+        shuffledOptions.forEach(option => {
+            const button = document.createElement('button');
+            button.className = 'option-button';
+            button.textContent = option;
+            button.onclick = () => checkAnswer(option, correctAnswer, button);
+            optionsContainer.appendChild(button);
+        });
+    }
+
+    function checkAnswer(userAnswer, correctAnswer, clickedButton) {
+        if (isPaused) return;
+
+        Array.from(optionsContainer.children).forEach(btn => btn.disabled = true);
+
+        if (userAnswer === correctAnswer) {
+            score++;
+            scoreElement.textContent = score;
+            messageBox.textContent = 'Correct!';
+            messageBox.className = 'message-box correct';
+            clickedButton.classList.add('correct');
+            setTimeout(() => {
+                generateProblem();
+            }, 500);
+        } else {
+            messageBox.textContent = `Incorrect! The answer was ${correctAnswer}.`;
+            messageBox.className = 'message-box incorrect';
+            clickedButton.classList.add('incorrect');
+
+            Array.from(optionsContainer.children).forEach(btn => {
+                if (parseInt(btn.textContent) === correctAnswer) {
+                    btn.classList.add('correct');
+                }
+            });
+            
+            setTimeout(() => {
+                generateProblem();
+            }, 1500);
+        }
+    }
+
+    function updateTimer() {
+        if (isPaused) return;
+        timer--;
+        timeElement.textContent = timer;
+        if (timer <= 0) {
+            endGame();
+        }
+    }
+
+    function startGame() {
+        score = 0;
+        timer = parseInt(timerSelect.value);
+        isPaused = false;
+        pauseButton.textContent = 'Pause';
+        
+        scoreElement.textContent = score;
+        timeElement.textContent = timer;
+        
+        startScreen.style.display = 'none';
+        gamePlay.style.display = 'flex';
+        
+        generateProblem();
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function endGame() {
+        clearInterval(timerInterval);
+        problemElement.textContent = 'Game Over!';
+        optionsContainer.innerHTML = '';
+        messageBox.textContent = `You scored ${score} points!`;
+        messageBox.className = 'message-box';
+        startScreen.style.display = 'flex';
+        gamePlay.style.display = 'none';
+    }
+
+    function toggleMode() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        if (body.classList.contains('dark-mode')) {
+            modeToggle.textContent = '🌙';
+        } else {
+            modeToggle.textContent = '☀️';
+        }
+    }
+
+    function togglePause() {
+        isPaused = !isPaused;
+        if (isPaused) {
+            pauseButton.textContent = 'Resume';
+            clearInterval(timerInterval);
+        } else {
+            pauseButton.textContent = 'Pause';
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+    }
+
+    function skipProblem() {
+        if (!isPaused) {
+             generateProblem();
+        }
+    }
+
+    startButton.addEventListener('click', startGame);
+    modeToggle.addEventListener('click', toggleMode);
+    pauseButton.addEventListener('click', togglePause);
+    nextButton.addEventListener('click', skipProblem);
+
+    window.onload = () => {
+        startScreen.style.display = 'flex';
+        gamePlay.style.display = 'none';
+    };
+</script>
+
+</body>
+</html>
