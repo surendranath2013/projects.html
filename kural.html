@@ -1,0 +1,792 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tirukkural Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .draggable-word {
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            touch-action: none;
+        }
+        .draggable-word:active {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .drop-zone {
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .drag-over {
+            background-color: #e0e7ff;
+            border-color: #4f46e5;
+        }
+        .success-message {
+            color: #10b981;
+        }
+        .error-message {
+            color: #ef4444;
+        }
+        .kural-answer {
+            font-size: 90%; /* 40% smaller than original */
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-3xl shadow-2xl p-6 sm:p-10 w-full max-w-2xl text-center">
+        <div id="start-page" class="">
+            <h2 class="text-4xl sm:text-5xl font-bold text-gray-800 mb-2">குரல் ஓவியம்</h2>
+            <p class="text-lg text-gray-600 mb-8">A game to learn and appreciate Tirukkural.</p>
+            <p class="text-xl font-semibold mb-4 text-gray-700">Select a Level to begin:</p>
+            <div class="flex justify-center space-x-4 mb-8">
+                <button id="start-level1-btn" class="px-6 py-3 rounded-full font-semibold text-lg transition-all duration-300 transform hover:scale-105 bg-indigo-600 text-white shadow-lg">Level 1</button>
+                <button id="start-level2-btn" class="px-6 py-3 rounded-full font-semibold text-lg transition-all duration-300 transform hover:scale-105 bg-gray-300 text-gray-800">Level 2</button>
+            </div>
+            <button id="start-game-btn" class="px-8 py-4 rounded-full font-bold text-white bg-green-500 transition-all duration-300 hover:bg-green-600 transform hover:scale-105 shadow-md">Start Game</button>
+        </div>
+
+        <div id="game-ui" class="hidden">
+            <h1 class="text-4xl sm:text-5xl font-bold text-gray-800 mb-2">திருக்குறள்</h1>
+            <p id="current-level-display" class="text-lg text-gray-600 mb-8"></p>
+
+            <div id="level1-container" class="level-container hidden">
+                <div id="word-jumble" class="flex flex-wrap justify-center gap-4 mb-6"></div>
+                <div id="drop-zone-rows" class="flex flex-col gap-4">
+                    <div id="word-order-row1" class="flex flex-wrap justify-center gap-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300"></div>
+                    <div id="word-order-row2" class="flex flex-wrap justify-center gap-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300"></div>
+                </div>
+                
+                <div class="flex justify-center space-x-4 mt-8">
+                     <button id="check-btn-level1" class="px-8 py-4 rounded-full font-bold text-white bg-green-500 transition-all duration-300 hover:bg-green-600 transform hover:scale-105 shadow-md">Check</button>
+                     <button id="show-answer-btn-level1" class="px-8 py-4 rounded-full font-bold text-white bg-blue-500 transition-all duration-300 hover:bg-blue-600 transform hover:scale-105 shadow-md">Show Answer</button>
+                     <button id="next-btn-level1" class="px-8 py-4 rounded-full font-bold text-white bg-purple-500 transition-all duration-300 hover:bg-purple-600 transform hover:scale-105 shadow-md hidden">Next</button>
+                </div>
+                <div id="kural-answer-level1" class="kural-answer text-gray-700 mt-6 hidden"></div>
+            </div>
+
+            <div id="level2-container" class="level-container hidden">
+                <p id="kural-text-level2" class="text-2xl sm:text-3xl text-gray-700 mb-6 text-left leading-relaxed"></p>
+                <div id="options-container" class="flex flex-wrap justify-center gap-4 mb-8"></div>
+                <div class="flex justify-center space-x-4">
+                    <button id="check-btn-level2" class="px-8 py-4 rounded-full font-bold text-white bg-green-500 transition-all duration-300 hover:bg-green-600 transform hover:scale-105 shadow-md">Check</button>
+                    <button id="show-answer-btn-level2" class="px-8 py-4 rounded-full font-bold text-white bg-blue-500 transition-all duration-300 hover:bg-blue-600 transform hover:scale-105 shadow-md">Show Answer</button>
+                    <button id="next-btn-level2" class="px-8 py-4 rounded-full font-bold text-white bg-purple-500 transition-all duration-300 hover:bg-purple-600 transform hover:scale-105 shadow-md hidden">Next</button>
+                </div>
+                <div id="kural-answer-level2" class="kural-answer text-gray-700 mt-6 hidden"></div>
+            </div>
+
+            <div id="game-message" class="mt-8 text-xl font-semibold p-4 rounded-lg"></div>
+        </div>
+    </div>
+    <script>
+       // Data for Tirukkural verses
+        const tirukkurals = [
+    {
+        text: "அகர முதல எழுத்தெல்லாம் ஆதி<br>பகவன் முதற்றே உலகு.",
+        words: ["அகர", "முதல", "எழுத்தெல்லாம்", "ஆதி", "பகவன்", "முதற்றே", "உலகு"]
+    },
+    {
+        text: "கற்றதனால் ஆய பயனென்கொல் வாலறிவன்<br>நற்றாள் தொழாஅர் எனின்.",
+        words: ["கற்றதனால்", "ஆய", "பயனென்கொல்", "வாலறிவன்", "நற்றாள்", "தொழாஅர்", "எனின்"]
+    },
+    {
+        text: "மலர்மிசை யேகினான் மாணடி சேர்ந்தார்<br>நிலமிசை நீடுவாழ் வார்.",
+        words: ["மலர்மிசை", "யேகினான்", "மாணடி", "சேர்ந்தார்", "நிலமிசை", "நீடுவாழ்", "வார்"]
+    },
+    {
+        text: "தீயினாற் சுட்டபுண் உள்ளாறும் ஆறாதே<br>நாவினாற் சுட்ட வடு.",
+        words: ["தீயினாற்", "சுட்டபுண்", "உள்ளாறும்", "ஆறாதே", "நாவினாற்", "சுட்ட", "வடு"]
+    },
+    {
+        text: "அழுக்காறு அவாவெகுலி இன்னாச்சொல் நான்கும்<br>இழுக்கா இயன்றது அறம்.",
+        words: ["அழுக்காறு", "அவாவெகுலி", "இன்னாச்சொல்", "நான்கும்", "இழுக்கா", "இயன்றது", "அறம்"]
+    },
+    {
+        text: "ஒழுக்கம் விழுப்பம் தரலான்; ஒழுக்கம் இல்லான்<br>இழுக்கம் படுவான்.",
+        words: ["ஒழுக்கம்", "விழுப்பம்", "தரலான்", "ஒழுக்கம்", "இல்லான்", "இழுக்கம்", "படுவான்"]
+    },
+    {
+        text: "ஒழுக்கம் உயிரின் காப்பு; ஒழுக்கம் கெட்டான்<br>உயிர் கெடும்.",
+        words: ["ஒழுக்கம்", "உயிரின்", "காப்பு", "ஒழுக்கம்", "கெட்டான்", "உயிர்", "கெடும்"]
+    },
+    {
+        text: "தீயவை தண்டனையால் தணியும்; நாவினால்<br>தீயவை தீயே படும்.",
+        words: ["தீயவை", "தண்டனையால்", "தணியும்", "நாவினால்", "தீயவை", "தீயே", "படும்"]
+    },
+    {
+        text: "அன்பே சகலகும் அன்னது; அன்பில்லார்<br>பிண்டமே.",
+        words: ["அன்பே", "சகலகும்", "அன்னது", "அன்பில்லார்", "பிண்டமே"]
+    },
+    {
+        text: "அன்பு அமையாதார் எல்லாரும் எஃகுடையர்;<br>அன்பு அமையாதார்க்கு எஃகும் பாற்.",
+        words: ["அன்பு", "அமையாதார்", "எல்லாரும்", "எஃகுடையர்", "அன்பு", "அமையாதார்க்கு", "எஃகும்", "பாற்"]
+    },
+    {
+        text: "கல்வி கருவி செல்வம் எனின் கல்வி<br>சிறந்த செல்வம்.",
+        words: ["கல்வி", "கருவி", "செல்வம்", "எனின்", "கல்வி", "சிறந்த", "செல்வம்"]
+    },
+    {
+        text: "கற்றது கைமண் அளவு; கல்லாதது<br>உலகளவு.",
+        words: ["கற்றது", "கைமண்", "அளவு", "கல்லாதது", "உலகளவு"]
+    },
+    {
+        text: "நாவினால் சுட்ட சொல்லால் உயிரினும்<br>ஆவினும் கேடு உண்டு.",
+        words: ["நாவினால்", "சுட்ட", "சொல்லால்", "உயிரினும்", "ஆவினும்", "கேடு", "உண்டு"]
+    },
+    {
+        text: "ஒழுக்கம் தரலான் உயர்வு; ஒழுக்கம்<br>கெட்டான் தாழ்வு.",
+        words: ["ஒழுக்கம்", "தரலான்", "உயர்வு", "ஒழுக்கம்", "கெட்டான்", "தாழ்வு"]
+    },
+    {
+        text: "அரசன் குடிமக்களை அன்போடு காக்கின்,<br>உலகம் தழைக்கும்.",
+        words: ["அரசன்", "குடிமக்களை", "அன்போடு", "காக்கின்", "உலகம்", "தழைக்கும்"]
+    },
+    {
+        text: "அரசன் காக்கும் குடி காப்பான்; காப்பான்<br>குடி காக்கும்.",
+        words: ["அரசன்", "காக்கும்", "குடி", "காப்பான்", "காப்பான்", "குடி", "காக்கும்"]
+    },
+    {
+        text: "ஒழுக்கம் உடைமை உயிரினும்<br>ஓம்பப் பெறும்.",
+        words: ["ஒழுக்கம்", "உடைமை", "உயிரினும்", "ஓம்பப்", "பெறும்"]
+    },
+    {
+        text: "நாடோறும் நாடு மகிழும்; அரசன்<br>குடிமக்கள் வாழும்.",
+        words: ["நாடோறும்", "நாடு", "மகிழும்", "அரசன்", "குடிமக்கள்", "வாழும்"]
+    },
+    {
+        text: "கற்றதனால் ஆய பயனென்கொல் காலத்தால்<br>கற்றதனால் மாண்டது உடைத்து.",
+        words: ["கற்றதனால்", "ஆய", "பயனென்கொல்", "காலத்தால்", "கற்றதனால்", "மாண்டது", "உடைத்து"]
+    },
+    {
+        text: "கல்வி ஒருவற்கு கற்பின் எளிமை அரியவாம்;<br>ஆயினும் ஆற்றின் இனிது.",
+        words: ["கல்வி", "ஒருவற்கு", "கற்பின்", "எளிமை", "அரியவாம்", "ஆயினும்", "ஆற்றின்", "இனிது"]
+    },
+    {
+        text: "கல்வி கற்கவற்கு உண்டாம் உயர்வு;<br>கல்வி கற்காதவற்கு இல்லை.",
+        words: ["கல்வி", "கற்கவற்கு", "உண்டாம்", "உயர்வு", "கல்வி", "கற்காதவற்கு", "இல்லை"]
+    },
+    {
+        text: "கல்வி யில்லார்க்கு உயிரில்லை; உயிருள்ளார்க்கு<br>அறமில்லை; அறமில்லார்க்கு இனியில்லை.",
+        words: ["கல்வி", "யில்லார்க்கு", "உயிரில்லை", "உயிருள்ளார்க்கு", "அறமில்லை", "அறமில்லார்க்கு", "இனியில்லை"]
+    },
+    {
+        text: "அன்பின்றி வாழ்வு உயிருக்கு ஆற்றாது;<br>அன்புடன் வாழ்வது வாழ்வாகும்.",
+        words: ["அன்பின்றி", "வாழ்வு", "உயிருக்கு", "ஆற்றாது", "அன்புடன்", "வாழ்வது", "வாழ்வாகும்"]
+    },
+    {
+        text: "அன்புடைமை ஆன்ற பெருமை உடைத்தே;<br>அன்பில்லார் எல்லாரும் தாழ்வு.",
+        words: ["அன்புடைமை", "ஆன்ற", "பெருமை", "உடைத்தே", "அன்பில்லார்", "எல்லாரும்", "தாழ்வு"]
+    },
+    {
+        text: "இனியஉளவாக இன்னாத கூறல்<br>கனிஇருப்பக் காய்கவர்ந் தற்று.",
+        words: ["இனியஉளவாக", "இன்னாத", "கூறல்", "கனி", "இருப்பக்", "காய்கவர்ந்", "அற்று"]
+    },
+    {
+        text: "பொய்யாமை யின்மை புகழின் தலைப்பெருக்கு;<br>மெய்யாமை யின்மை மிக்க கெடு.",
+        words: ["பொய்யாமை", "யின்மை", "புகழின்", "தலைப்பெருக்கு", "மெய்யாமை", "யின்மை", "மிக்க", "கெடு"]
+    },
+    {
+        text: "பொய்யாமை யின்மை புகழின் தலைமை;<br>பொய்யாமை யின்மை நல்லோர்க்கு வினை.",
+        words: ["பொய்யாமை", "யின்மை", "புகழின்", "தலைமை", "பொய்யாமை", "யின்மை", "நல்லோர்க்கு", "வினை"]
+    },
+    {
+        text: "இன்னா செய்யாமை இன்னா கூறாமை<br>மன்னா வியல்பின் தலை.",
+        words: ["இன்னா", "செய்யாமை", "இன்னா", "கூறாமை", "மன்னா", "வியல்பின்", "தலை"]
+    },
+    {
+        text: "அன்புடைமை யில்லார்க்கு உயிரினும்<br>ஒப்பற்ற சேய்மை உண்டு.",
+        words: ["அன்புடைமை", "யில்லார்க்கு", "உயிரினும்", "ஒப்பற்ற", "சேய்மை", "உண்டு"]
+    },
+    {
+        text: "நன்றி மறப்பது நன்றன்று; நன்றல்லது<br>அன்றி மறப்பது நன்று.",
+        words: ["நன்றி", "மறப்பது", "நன்றன்று", "நன்றல்லது", "அன்றி", "மறப்பது", "நன்று"]
+    },
+    {
+        text: "எந்நன்றி கொன்றார்க்கும் உய்வுண்டாம்; உய்வில்லை<br>செய்நன்றி கொன்ற மகற்கு.",
+        words: ["எந்நன்றி", "கொன்றார்க்கும்", "உய்வுண்டாம்", "உய்வில்லை", "செய்நன்றி", "கொன்ற", "மகற்கு"]
+    },
+    {
+        text: "நன்றியறி வார்க்கு நன்று பயக்கும்;<br>நன்றியறியாதார்க்கு இல்லை பயன்.",
+        words: ["நன்றியறி", "வார்க்கு", "நன்று", "பயக்கும்", "நன்றியறியாதார்க்கு", "இல்லை", "பயன்"]
+    },
+    {
+        text: "இன்னா செய்தார்க்கு இரங்கல் உண்டாம்;<br>அந்நன்றி செய்தார்க்கு இல்லை.",
+        words: ["இன்னா", "செய்தார்க்கு", "இரங்கல்", "உண்டாம்", "அந்நன்றி", "செய்தார்க்கு", "இல்லை"]
+    },
+    {
+        text: "அன்புடன் வாழும் மனிதர் தாழ்வு காணார்;<br>அன்பின்றி வாழும் மனிதர் உய்வில்லை.",
+        words: ["அன்புடன்", "வாழும்", "மனிதர்", "தாழ்வு", "காணார்", "அன்பின்றி", "வாழும்", "மனிதர்", "உய்வில்லை"]
+    },
+    {
+        text: "கொன்றாலும் இனிய சொல் கேளார்;<br>வென்றாலும் தீய சொல் வேண்டார்.",
+        words: ["கொன்றாலும்", "இனிய", "சொல்", "கேளார்", "வென்றாலும்", "தீய", "சொல்", "வேண்டார்"]
+    },
+    {
+        text: "சொல்லுக சொல்லிற் சிறந்தது; சொல்லற்க<br>சொல்லிற் சிறியவை எல்லாம்.",
+        words: ["சொல்லுக", "சொல்லிற்", "சிறந்தது", "சொல்லற்க", "சொல்லிற்", "சிறியவை", "எல்லாம்"]
+    },
+    {
+        text: "நாவினால் தீய சொல் கூறின்<br>உயிரினும் ஆவினும் கேடு உண்டு.",
+        words: ["நாவினால்", "தீய", "சொல்", "கூறின்", "உயிரினும்", "ஆவினும்", "கேடு", "உண்டு"]
+    },
+    {
+        text: "செல்வத்துள் செல்வம் செவிச்செல்வம்; அச்செல்வம்<br>செல்வத்துள் எல்லாம் தலையான் வரும்.",
+        words: ["செல்வத்துள்", "செல்வம்", "செவிச்செல்வம்", "அச்செல்வம்", "செல்வத்துள்", "எல்லாம்", "தலையான்", "வரும்"]
+    },
+    {
+        text: "செவியுடையான் சொல்லினும் கற்றல்; செவியில்லான்<br>சொல்லினும் கற்றல் பயன்.",
+        words: ["செவியுடையான்", "சொல்லினும்", "கற்றல்", "செவியில்லான்", "சொல்லினும்", "கற்றல்", "பயன்"]
+    },
+    {
+        text: "கேட்பதன் மூலம் அறிவு பெருகும்;<br>கேட்காதான் அறிவு குன்றும்.",
+        words: ["கேட்பதன்", "மூலம்", "அறிவு", "பெருகும்", "கேட்காதான்", "அறிவு", "குன்றும்"]
+    },
+    {
+        text: "செவியில்லான் கேட்கும் அறிவு அற்றான்; செவியுள்ளான்<br>கேட்கும் அறிவு உடையான்.",
+        words: ["செவியில்லான்", "கேட்கும்", "அறிவு", "அற்றான்", "செவியுள்ளான்", "கேட்கும்", "அறிவு", "உடையான்"]
+    },
+    {
+        text: "கேட்காதான் அறிவு குன்றும்; கேட்குமான்<br>அறிவு பெருகும்.",
+        words: ["கேட்காதான்", "அறிவு", "குன்றும்", "கேட்குமான்", "அறிவு", "பெருகும்"]
+    },
+    {
+        text: "செவியுடையான் சொல்லினும் கற்றல்; செவியில்லான்<br>சொல்லினும் பயன் இல்லை.",
+        words: ["செவியுடையான்", "சொல்லினும்", "கற்றல்", "செவியில்லான்", "சொல்லினும்", "பயன்", "இல்லை"]
+    },
+    {
+        text: "செவியினால் கேட்கும் சிறந்த செல்வம்; சொல்லினால்<br>கற்றலின் பயன் உண்டு.",
+        words: ["செவியினால்", "கேட்கும்", "சிறந்த", "செல்வம்", "சொல்லினால்", "கற்றலின்", "பயன்", "உண்டு"]
+    },
+    {
+        text: "செல்வத்துள் செல்வம் செவிச்செல்வம்; அச்செல்வம்<br>செல்வத்துள் எல்லாம் தலையான் வரும்.",
+        words: ["செல்வத்துள்", "செல்வம்", "செவிச்செல்வம்", "அச்செல்வம்", "செல்வத்துள்", "எல்லாம்", "தலையான்", "வரும்"]
+    },
+    {
+        text: "நன்றி மறப்பது நன்றன்று; நன்றல்லது<br>அன்றி மறப்பது நன்று.",
+        words: ["நன்றி", "மறப்பது", "நன்றன்று", "நன்றல்லது", "அன்றி", "மறப்பது", "நன்று"]
+    },
+    {
+        text: "எந்நன்றி கொன்றார்க்கும் உய்வுண்டாம்; உய்வில்லை<br>செய்நன்றி கொன்ற மகற்கு.",
+        words: ["எந்நன்றி", "கொன்றார்க்கும்", "உய்வுண்டாம்", "உய்வில்லை", "செய்நன்றி", "கொன்ற", "மகற்கு"]
+    },
+    {
+        text: "நன்றியறி வார்க்கு நன்று பயக்கும்;<br>நன்றியறியாதார்க்கு இல்லை பயன்.",
+        words: ["நன்றியறி", "வார்க்கு", "நன்று", "பயக்கும்", "நன்றியறியாதார்க்கு", "இல்லை", "பயன்"]
+    },
+    {
+        text: "இன்னா செய்தார்க்கு இரங்கல் உண்டாம்;<br>அந்நன்றி செய்தார்க்கு இல்லை.",
+        words: ["இன்னா", "செய்தார்க்கு", "இரங்கல்", "உண்டாம்", "அந்நன்றி", "செய்தார்க்கு", "இல்லை"]
+    },
+    {
+        text: "சொல்லுக சொல்லிற் சிறந்தது; சொல்லற்க<br>சொல்லிற் சிறியவை எல்லாம்.",
+        words: ["சொல்லுக", "சொல்லிற்", "சிறந்தது", "சொல்லற்க", "சொல்லிற்", "சிறியவை", "எல்லாம்"]
+    },
+    {
+        text: "கொன்றாலும் இனிய சொல் கேளார்;<br>வென்றாலும் தீய சொல் வேண்டார்.",
+        words: ["கொன்றாலும்", "இனிய", "சொல்", "கேளார்", "வென்றாலும்", "தீய", "சொல்", "வேண்டார்"]
+    },
+    {
+        text: "நாவினால் தீய சொல் கூறின்<br>உயிரினும் ஆவினும் கேடு உண்டு.",
+        words: ["நாவினால்", "தீய", "சொல்", "கூறின்", "உயிரினும்", "ஆவினும்", "கேடு", "உண்டு"]
+    },
+    {
+        text: "இனியஉளவாக இன்னாத கூறல்<br>கனிஇருப்பக் காய்கவர்ந் தற்று.",
+        words: ["இனியஉளவாக", "இன்னாத", "கூறல்", "கனி", "இருப்பக்", "காய்கவர்ந்", "அற்று"]
+    },
+    {
+        text: "பொய்யாமை யின்மை புகழின் தலைப்பெருக்கு;<br>மெய்யாமை யின்மை மிக்க கெடு.",
+        words: ["பொய்யாமை", "யின்மை", "புகழின்", "தலைப்பெருக்கு", "மெய்யாமை", "யின்மை", "மிக்க", "கெடு"]
+    },
+    {
+        text: "பொய்யாமை யின்மை புகழின் தலைமை;<br>பொய்யாமை யின்மை நல்லோர்க்கு வினை.",
+        words: ["பொய்யாமை", "யின்மை", "புகழின்", "தலைமை", "பொய்யாமை", "யின்மை", "நல்லோர்க்கு", "வினை"]
+    },
+    {
+        text: "இன்னா செய்யாமை இன்னா கூறாமை<br>மன்னா வியல்பின் தலை.",
+        words: ["இன்னா", "செய்யாமை", "இன்னா", "கூறாமை", "மன்னா", "வியல்பின்", "தலை"]
+    },
+    {
+        text: "தீயினாற் சுட்டபுண் உள்ளாறும் ஆறாதே<br>நாவினாற் சுட்ட வடு.",
+        words: ["தீயினாற்", "சுட்டபுண்", "உள்ளாறும்", "ஆறாதே", "நாவினாற்", "சுட்ட", "வடு"]
+    },
+    {
+        text: "அழுக்காறு அவாவெகுலி இன்னாச்சொல் நான்கும்<br>இழுக்கா இயன்றது அறம்.",
+        words: ["அழுக்காறு", "அவாவெகுலி", "இன்னாச்சொல்", "நான்கும்", "இழுக்கா", "இயன்றது", "அறம்"]
+    },
+    {
+        text: "ஒழுக்கம் உடைமை உயிரினும்<br>ஓம்பப் பெறும்.",
+        words: ["ஒழுக்கம்", "உடைமை", "உயிரினும்", "ஓம்பப்", "பெறும்"]
+    },
+    {
+        text: "ஒழுக்கம் விழுப்பம் தரலான்; ஒழுக்கம் இல்லான்<br>இழுக்கம் படுவான்.",
+        words: ["ஒழுக்கம்", "விழுப்பம்", "தரலான்", "ஒழுக்கம்", "இல்லான்", "இழுக்கம்", "படுவான்"]
+    },
+    {
+        text: "ஒழுக்கம் தரலான் உயர்வு; ஒழுக்கம்<br>கெட்டான் தாழ்வு.",
+        words: ["ஒழுக்கம்", "தரலான்", "உயர்வு", "ஒழுக்கம்", "கெட்டான்", "தாழ்வு"]
+    },
+    {
+        text: "ஒழுக்கம் உயிரின் காப்பு; ஒழுக்கம் கெட்டான்<br>உயிர் கெடும்.",
+        words: ["ஒழுக்கம்", "உயிரின்", "காப்பு", "ஒழுக்கம்", "கெட்டான்", "உயிர்", "கெடும்"]
+    },
+    {
+        text: "அன்பே சகலகும் அன்னது; அன்பில்லார்<br>பிண்டமே.",
+        words: ["அன்பே", "சகலகும்", "அன்னது", "அன்பில்லார்", "பிண்டமே"]
+    },
+    {
+        text: "அன்பு அமையாதார் எல்லாரும் எஃகுடையர்;<br>அன்பு அமையாதார்க்கு எஃகும் பாற்.",
+        words: ["அன்பு", "அமையாதார்", "எல்லாரும்", "எஃகுடையர்", "அன்பு", "அமையாதார்க்கு", "எஃகும்", "பாற்"]
+    },
+    {
+        text: "அன்பின்றி வாழ்வு உயிருக்கு ஆற்றாது;<br>அன்புடன் வாழ்வது வாழ்வாகும்.",
+        words: ["அன்பின்றி", "வாழ்வு", "உயிருக்கு", "ஆற்றாது", "அன்புடன்", "வாழ்வது", "வாழ்வாகும்"]
+    },
+    {
+        text: "அன்புடைமை ஆன்ற பெருமை உடைத்தே;<br>அன்பில்லார் எல்லாரும் தாழ்வு.",
+        words: ["அன்புடைமை", "ஆன்ற", "பெருமை", "உடைத்தே", "அன்பில்லார்", "எல்லாரும்", "தாழ்வு"]
+    },
+    {
+        text: "அன்புடைமை யில்லார்க்கு உயிரினும்<br>ஒப்பற்ற சேய்மை உண்டு.",
+        words: ["அன்புடைமை", "யில்லார்க்கு", "உயிரினும்", "ஒப்பற்ற", "சேய்மை", "உண்டு"]
+    },
+    {
+        text: "அன்புடன் வாழும் மனிதர் தாழ்வு காணார்;<br>அன்பின்றி வாழும் மனிதர் உய்வில்லை.",
+        words: ["அன்புடன்", "வாழும்", "மனிதர்", "தாழ்வு", "காணார்", "அன்பின்றி", "வாழும்", "மனிதர்", "உய்வில்லை"]
+    },
+    {
+        text: "அரசன் குடிமக்களை அன்போடு காக்கின்,<br>உலகம் தழைக்கும்.",
+        words: ["அரசன்", "குடிமக்களை", "அன்போடு", "காக்கின்", "உலகம்", "தழைக்கும்"]
+    },
+    {
+        text: "அரசன் காக்கும் குடி காப்பான்; காப்பான்<br>குடி காக்கும்.",
+        words: ["அரசன்", "காக்கும்", "குடி", "காப்பான்", "காப்பான்", "குடி", "காக்கும்"]
+    },
+{
+    text: "அன்பும் அறனும் உடைத்தாயின் இல்வாழ்க்கை<br>பண்பும் பயனும் அது.",
+    words: ["அன்பும்", "அறனும்", "உடைத்தாயின்", "இல்வாழ்க்கை", "பண்பும்", "பயனும்", "அது"]
+},
+{
+    text: "அன்பே உடையார்க்கு அசைவில்லை ஆன்ற பெருமையும்<br>இலர்.",
+    words: ["அன்பே", "உடையார்க்கு", "அசைவில்லை", "ஆன்ற", "பெருமையும்", "இலர்"]
+},
+{
+    text: "ஆற்றின் வருந்தா தவத்தான் பிறர்க்கு<br>செயற்றானே தானே துயர்.",
+    words: ["ஆற்றின்", "வருந்தா", "தவத்தான்", "பிறர்க்கு", "செயற்றானே", "தானே", "துயர்"]
+},
+{
+    text: "அருளல்லது இல்லாயின் தீதில்லை தீதன்றே<br>அல்லார் வழி வாழும் வாழ்வு.",
+    words: ["அருளல்லது", "இல்லாயின்", "தீதில்லை", "தீதன்றே", "அல்லார்", "வழி", "வாழும்", "வாழ்வு"]
+},
+{
+    text: "இன்னாசெய் தாரை ஒறுத்தல் அவர்நாண<br>நன்னயம் செய்தற் பொருட்டு.",
+    words: ["இன்னாசெய்", "தாரை", "ஒறுத்தல்", "அவர்நாண", "நன்னயம்", "செய்தற்", "பொருட்டு"]
+},
+{
+    text: "இன்னாசெய் தாரை ஒறுத்தல் அவர் செய்யும்<br>நன்னயம் நன்மைக்கு ஆறு.",
+    words: ["இன்னாசெய்", "தாரை", "ஒறுத்தல்", "அவர்", "செய்யும்", "நன்னயம்", "நன்மைக்கு", "ஆறு"]
+},
+{
+    text: "ஈதல் இசைபட வாழ்தல் அதுவல்லது<br>ஓதியெல்லாம் ஏதிலார் குற்றம்.",
+    words: ["ஈதல்", "இசைபட", "வாழ்தல்", "அதுவல்லது", "ஓதியெல்லாம்", "ஏதிலார்", "குற்றம்"]
+},
+{
+    text: "ஈதல் இசைவும் இருவர்க்கும் ஈந்ததன்<br>பாதை பெருமை தரும்.",
+    words: ["ஈதல்", "இசைவும்", "இருவர்க்கும்", "ஈந்ததன்", "பாதை", "பெருமை", "தரும்"]
+},
+{
+    text: "ஊர்ந்தார் உயிர்க்கும் உயிர்நிலை மாந்தர்<br>தமர்கண் தமியர் நிலை.",
+    words: ["ஊர்ந்தார்", "உயிர்க்கும்", "உயிர்நிலை", "மாந்தர்", "தமர்கண்", "தமியர்", "நிலை"]
+},
+{
+    text: "எண்பொருள் வல்லார்க்கு இல்லாகும் தீமைதான்<br>தண்பொருள் அல்லால் வரும்.",
+    words: ["எண்பொருள்", "வல்லார்க்கு", "இல்லாகும்", "தீமைதான்", "தண்பொருள்", "அல்லால்", "வரும்"]
+},
+{
+    text: "எண்ணிய முடிதல் சிறிது; எண்ணாமை<br>எண்ணிய தானே தலையாயது.",
+    words: ["எண்ணிய", "முடிதல்", "சிறிது", "எண்ணாமை", "எண்ணிய", "தானே", "தலையாயது"]
+},
+{
+    text: "எண்ணித் துணிக கருமம்; துணிந்தபின்<br>எண்ணுவம் என்பது இழுக்கு.",
+    words: ["எண்ணித்", "துணிக", "கருமம்", "துணிந்தபின்", "எண்ணுவம்", "என்பது", "இழுக்கு"]
+},
+{
+    text: "ஏற்றம் இழந்தார் உயிர்நிலை தாங்கார்<br>தாழ்ந்தாரின் தாழ்வு கடை.",
+    words: ["ஏற்றம்", "இழந்தார்", "உயிர்நிலை", "தாங்கார்", "தாழ்ந்தாரின்", "தாழ்வு", "கடை"]
+},
+{
+    text: "ஐயப்பாடு இல்லாதான் கண் பிறிது உண்டோ<br>உண்மை நிலை வன்பின் நெறி.",
+    words: ["ஐயப்பாடு", "இல்லாதான்", "கண்", "பிறிது", "உண்டோ", "உண்மை", "நிலை", "வன்பின்", "நெறி"]
+},
+{
+    text: "ஒழுக்கம் விழுப்பந் தரலான் ஒழுக்கம்<br>உலகுக்குத் தலையாயது.",
+    words: ["ஒழுக்கம்", "விழுப்பந்", "தரலான்", "ஒழுக்கம்", "உலகுக்குத்", "தலையாயது"]
+},
+{
+    text: "ஒழுக்கம் உடைமை குடிமை உடைமை<br>இழுக்கம் இழிந்த பிறர்.",
+    words: ["ஒழுக்கம்", "உடைமை", "குடிமை", "உடைமை", "இழுக்கம்", "இழிந்த", "பிறர்"]
+},
+{
+    text: "ஒழுக்கம் உடையார்க்கு உயர்வு உண்டாம்; ஒழுக்கம்<br>இல்லார்க்கு இழிவு தரும்.",
+    words: ["ஒழுக்கம்", "உடையார்க்கு", "உயர்வு", "உண்டாம்", "ஒழுக்கம்", "இல்லார்க்கு", "இழிவு", "தரும்"]
+},
+{
+    text: "ஒழுக்கம் உடையார்க்கு உண்டாம் புகழும்; ஒழுக்கம்<br>இல்லார்க்கு இல்.",
+    words: ["ஒழுக்கம்", "உடையார்க்கு", "உண்டாம்", "புகழும்", "ஒழுக்கம்", "இல்லார்க்கு", "இல்"]
+},
+{
+    text: "ஒழுக்கம் உடையார்க்கு வாழ்வு உண்டாம்; ஒழுக்கம்<br>இல்லார்க்கு இல்.",
+    words: ["ஒழுக்கம்", "உடையார்க்கு", "வாழ்வு", "உண்டாம்", "ஒழுக்கம்", "இல்லார்க்கு", "இல்"]
+},
+{
+    text: "நன்றி மறப்பது நன்றன்று நன்றல்லது<br>அன்றே மறப்பது நன்று.",
+    words: ["நன்றி", "மறப்பது", "நன்றன்று", "நன்றல்லது", "அன்றே", "மறப்பது", "நன்று"]
+},
+{
+    text: "நன்றி எனப்படுவது நன்றன்று; நன்றல்லது<br>அன்றே எனப்படுவது நன்று.",
+    words: ["நன்றி", "எனப்படுவது", "நன்றன்று", "நன்றல்லது", "அன்றே", "எனப்படுவது", "நன்று"]
+},
+{
+    text: "பயன்தூக்கார் செய்த உதவி நயன்தூக்கின்<br>நன்மை கடலின் பெரிது.",
+    words: ["பயன்தூக்கார்", "செய்த", "உதவி", "நயன்தூக்கின்", "நன்மை", "கடலின்", "பெரிது"]
+},
+{
+    text: "பயன்தூக்கி உதவி செயின் நயன்தூக்கார்<br>நன்மை கடலின் பெரிது.",
+    words: ["பயன்தூக்கி", "உதவி", "செயின்", "நயன்தூக்கார்", "நன்மை", "கடலின்", "பெரிது"]
+},
+{
+    text: "பயன்தூக்காது உதவி செயின் அது யானும்<br>உயர்வு தரும்.",
+    words: ["பயன்தூக்காது", "உதவி", "செயின்", "அது", "யானும்", "உயர்வு", "தரும்"]
+},
+{
+    text: "பெரிதினிது சான்றோர்க்கு உதவி சிறிதினிது<br>அற்றார் அழிவதூஉம்.",
+    words: ["பெரிதினிது", "சான்றோர்க்கு", "உதவி", "சிறிதினிது", "அற்றார்", "அழிவதூஉம்"]
+},
+{
+    text: "தீயினால் சுட்டபுண் உள்ளாறும் ஆறாதே<br>நாவினால் சுட்ட வடு.",
+    words: ["தீயினால்", "சுட்டபுண்", "உள்ளாறும்", "ஆறாதே", "நாவினால்", "சுட்ட", "வடு"]
+},
+{
+    text: "தீயினால் சுட்ட புண் குணமாகும்; தீயச்<br>சொல்லினால் சுட்ட வடு.",
+    words: ["தீயினால்", "சுட்ட", "புண்", "குணமாகும்", "தீயச்", "சொல்லினால்", "சுட்ட", "வடு"]
+},
+{
+    text: "வஞ்சமில்லை யெனினும் வன்மை யுடையார்க்கு<br>அஞ்சும் அகன்ற அறிவு.",
+    words: ["வஞ்சமில்லை", "யெனினும்", "வன்மை", "உுடையார்க்கு", "அஞ்சும்", "அகன்ற", "அறிவு"]
+},
+{
+    text: "வலியார்க்கு மாறேற்றல் ஓம்புக; பலியார்க்கு<br>பண்பின் தலைமை தரும்.",
+    words: ["வலியார்க்கு", "மாறேற்றல்", "ஓம்புக", "பலியார்க்கு", "பண்பின்", "தலைமை", "தரும்"]
+},
+{
+    text: "வினை விடுபட்டு முடிவில செய்யின் வினைமுடிவது<br>இலையே.",
+    words: ["வினை", "விடுபட்டு", "முடிவில", "செய்யின்", "வினைமுடிவது", "இலையே"]
+}
+
+
+        ];
+
+        let currentKural = null;
+        let selectedLevel = 1;
+        let blanks = [];
+
+        const startPage = document.getElementById('start-page');
+        const gameUi = document.getElementById('game-ui');
+        const startLevel1Btn = document.getElementById('start-level1-btn');
+        const startLevel2Btn = document.getElementById('start-level2-btn');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const currentLevelDisplay = document.getElementById('current-level-display');
+        const level1Container = document.getElementById('level1-container');
+        const level2Container = document.getElementById('level2-container');
+        const wordJumble = document.getElementById('word-jumble');
+        // Get the new drop zone containers
+        const wordOrderRow1 = document.getElementById('word-order-row1');
+        const wordOrderRow2 = document.getElementById('word-order-row2');
+        const checkBtnLevel1 = document.getElementById('check-btn-level1');
+        const showAnswerBtnLevel1 = document.getElementById('show-answer-btn-level1');
+        const nextBtnLevel1 = document.getElementById('next-btn-level1');
+        const kuralAnswerLevel1 = document.getElementById('kural-answer-level1');
+        const kuralTextLevel2 = document.getElementById('kural-text-level2');
+        const optionsContainer = document.getElementById('options-container');
+        const checkBtnLevel2 = document.getElementById('check-btn-level2');
+        const showAnswerBtnLevel2 = document.getElementById('show-answer-btn-level2');
+        const nextBtnLevel2 = document.getElementById('next-btn-level2');
+        const kuralAnswerLevel2 = document.getElementById('kural-answer-level2');
+        const gameMessage = document.getElementById('game-message');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function selectLevel(level) {
+            selectedLevel = level;
+            startLevel1Btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-lg');
+            startLevel2Btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-lg');
+            startLevel1Btn.classList.add('bg-gray-300', 'text-gray-800');
+            startLevel2Btn.classList.add('bg-gray-300', 'text-gray-800');
+
+            if (level === 1) {
+                startLevel1Btn.classList.remove('bg-gray-300', 'text-gray-800');
+                startLevel1Btn.classList.add('bg-indigo-600', 'text-white', 'shadow-lg');
+            } else {
+                startLevel2Btn.classList.remove('bg-gray-300', 'text-gray-800');
+                startLevel2Btn.classList.add('bg-indigo-600', 'text-white', 'shadow-lg');
+            }
+        }
+
+        function startGame() {
+            startPage.classList.add('hidden');
+            gameUi.classList.remove('hidden');
+            gameMessage.textContent = '';
+            gameMessage.classList.remove('success-message', 'error-message', 'bg-red-100', 'bg-green-100');
+
+            if (selectedLevel === 1) {
+                currentLevelDisplay.textContent = "Level 1: Jumbled Words";
+                loadLevel1();
+            } else {
+                currentLevelDisplay.textContent = "Level 2: Fill in the Blanks";
+                loadLevel2();
+            }
+        }
+
+        function loadLevel1() {
+            level1Container.classList.remove('hidden');
+            level2Container.classList.add('hidden');
+            wordJumble.innerHTML = '';
+            wordOrderRow1.innerHTML = '';
+            wordOrderRow2.innerHTML = '';
+            kuralAnswerLevel1.classList.add('hidden');
+            showAnswerBtnLevel1.disabled = false;
+            nextBtnLevel1.classList.add('hidden');
+            checkBtnLevel1.classList.remove('hidden');
+            showAnswerBtnLevel1.classList.remove('hidden');
+
+            currentKural = tirukkurals[Math.floor(Math.random() * tirukkurals.length)];
+            const jumbledWords = shuffleArray([...currentKural.words]);
+
+            jumbledWords.forEach(word => {
+                const wordDiv = document.createElement('div');
+                wordDiv.textContent = word;
+                wordDiv.className = 'draggable-word bg-indigo-500 text-white rounded-md px-4 py-2 text-xl font-medium shadow-md';
+                wordDiv.draggable = true;
+                wordDiv.dataset.word = word;
+                wordJumble.appendChild(wordDiv);
+            });
+
+            // Create 4 drop zones for the first row
+            for (let i = 0; i < 4; i++) {
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone h-12 flex-1 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-md min-w-16';
+                wordOrderRow1.appendChild(dropZone);
+            }
+
+            // Create 3 drop zones for the second row
+            for (let i = 0; i < 3; i++) {
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone h-12 flex-1 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-md min-w-16';
+                wordOrderRow2.appendChild(dropZone);
+            }
+
+            wordJumble.addEventListener('dragstart', handleDragStart);
+            wordOrderRow1.addEventListener('dragover', handleDragOver);
+            wordOrderRow1.addEventListener('drop', handleDrop);
+            wordOrderRow1.addEventListener('dragleave', handleDragLeave);
+            wordOrderRow2.addEventListener('dragover', handleDragOver);
+            wordOrderRow2.addEventListener('drop', handleDrop);
+            wordOrderRow2.addEventListener('dragleave', handleDragLeave);
+        }
+
+        function loadLevel2() {
+            level2Container.classList.remove('hidden');
+            level1Container.classList.add('hidden');
+            kuralTextLevel2.innerHTML = '';
+            optionsContainer.innerHTML = '';
+            kuralAnswerLevel2.classList.add('hidden');
+            showAnswerBtnLevel2.disabled = false;
+            nextBtnLevel2.classList.add('hidden');
+            checkBtnLevel2.classList.remove('hidden');
+            showAnswerBtnLevel2.classList.remove('hidden');
+
+            currentKural = tirukkurals[Math.floor(Math.random() * tirukkurals.length)];
+            const lines = currentKural.text.split('<br>');
+            blanks = [];
+
+            lines.forEach((line, lineIndex) => {
+                const words = line.trim().split(' ');
+                const blankIndex = Math.floor(Math.random() * words.length);
+                const blankWord = words[blankIndex];
+                
+                // Use a class for identification instead of a data attribute on each element
+                words[blankIndex] = `<span class="blank-spot inline-block w-24 h-8 border-b-2 border-gray-400 mx-1 align-bottom text-center text-xl"></span>`;
+                blanks.push({ lineIndex, word: blankWord, elementIndex: blankIndex });
+
+                const lineDiv = document.createElement('p');
+                lineDiv.className = 'mb-4';
+                lineDiv.innerHTML = words.join(' ');
+                kuralTextLevel2.appendChild(lineDiv);
+            });
+
+            const allWords = [...new Set(tirukkurals.flatMap(k => k.words))];
+
+            blanks.forEach((blank, index) => {
+                const correct = blank.word;
+                const incorrect = shuffleArray(allWords.filter(w => w !== correct)).slice(0, 2);
+                const options = shuffleArray([correct, ...incorrect]);
+
+                options.forEach(option => {
+                    const optionBtn = document.createElement('button');
+                    optionBtn.textContent = option;
+                    optionBtn.className = 'option-btn px-4 py-2 rounded-full font-semibold bg-gray-300 text-gray-800 transition-colors hover:bg-indigo-200';
+                    optionBtn.addEventListener('click', () => {
+                        const blankSpots = kuralTextLevel2.querySelectorAll('.blank-spot');
+                        const blankSpot = blankSpots[index];
+                        if (blankSpot) {
+                            blankSpot.textContent = option;
+                            optionBtn.disabled = true;
+                        }
+                    });
+                    optionsContainer.appendChild(optionBtn);
+                });
+            });
+        }
+
+        function checkLevel1() {
+            const placedWords = [];
+            const allDropZones = Array.from(wordOrderRow1.children).concat(Array.from(wordOrderRow2.children));
+            allDropZones.forEach(zone => {
+                placedWords.push(zone.textContent.trim());
+            });
+
+            const correctOrder = currentKural.words;
+            const isCorrect = JSON.stringify(placedWords) === JSON.stringify(correctOrder);
+
+            if (isCorrect) {
+                displayMessage("Correct! Well done.", true);
+                nextBtnLevel1.classList.remove('hidden');
+                checkBtnLevel1.classList.add('hidden');
+                showAnswerBtnLevel1.classList.add('hidden');
+            } else {
+                displayMessage("Incorrect. Try again!", false);
+            }
+        }
+
+        function checkLevel2() {
+            const blankSpots = kuralTextLevel2.querySelectorAll('.blank-spot');
+            let allCorrect = true;
+            
+            blankSpots.forEach((spot, index) => {
+                const filledWord = spot.textContent.trim();
+                const correctWord = blanks[index].word;
+                if (filledWord !== correctWord) {
+                    allCorrect = false;
+                    spot.classList.add('text-red-500');
+                } else {
+                    spot.classList.add('text-green-600');
+                }
+            });
+
+            if (allCorrect) {
+                displayMessage("Correct! You have filled all the blanks correctly.", true);
+                nextBtnLevel2.classList.remove('hidden');
+                checkBtnLevel2.classList.add('hidden');
+                showAnswerBtnLevel2.classList.add('hidden');
+            } else {
+                displayMessage("Incorrect. Some words are wrong. Try again!", false);
+            }
+        }
+
+        function showAnswer(level) {
+            let answerElement;
+            let answerText;
+            if (level === 1) {
+                answerElement = kuralAnswerLevel1;
+                answerText = currentKural.text;
+                showAnswerBtnLevel1.disabled = true;
+                nextBtnLevel1.classList.remove('hidden');
+                checkBtnLevel1.classList.add('hidden');
+                showAnswerBtnLevel1.classList.add('hidden');
+            } else {
+                answerElement = kuralAnswerLevel2;
+                answerText = currentKural.text;
+                showAnswerBtnLevel2.disabled = true;
+                nextBtnLevel2.classList.remove('hidden');
+                checkBtnLevel2.classList.add('hidden');
+                showAnswerBtnLevel2.classList.add('hidden');
+            }
+            answerElement.innerHTML = answerText;
+            answerElement.classList.remove('hidden');
+        }
+
+        function displayMessage(message, isSuccess) {
+            gameMessage.textContent = message;
+            gameMessage.classList.remove('success-message', 'error-message', 'bg-red-100', 'bg-green-100');
+            if (isSuccess) {
+                gameMessage.classList.add('success-message', 'bg-green-100');
+            } else {
+                gameMessage.classList.add('error-message', 'bg-red-100');
+            }
+        }
+
+        // Drag and Drop event handlers
+        let dragged = null;
+        function handleDragStart(e) {
+            dragged = e.target;
+            e.dataTransfer.setData('text/plain', dragged.dataset.word);
+            dragged.style.opacity = '0.5';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const target = e.target.closest('.drop-zone');
+            if (target && target.textContent.trim() === '') {
+                target.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            e.target.closest('.drop-zone').classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const dropZone = e.target.closest('.drop-zone');
+            dropZone.classList.remove('drag-over');
+            
+            if (dropZone && dropZone.textContent.trim() === '') {
+                dropZone.textContent = dragged.dataset.word;
+                dropZone.classList.remove('h-12', 'flex-1', 'border-dashed', 'border-gray-400');
+                dropZone.classList.add('bg-indigo-200', 'text-gray-800', 'font-semibold', 'rounded-md', 'px-4', 'py-2', 'whitespace-nowrap');
+                dragged.remove();
+            }
+        }
+        
+        // Event Listeners
+        startLevel1Btn.addEventListener('click', () => selectLevel(1));
+        startLevel2Btn.addEventListener('click', () => selectLevel(2));
+        startGameBtn.addEventListener('click', startGame);
+        checkBtnLevel1.addEventListener('click', checkLevel1);
+        checkBtnLevel2.addEventListener('click', checkLevel2);
+        showAnswerBtnLevel1.addEventListener('click', () => showAnswer(1));
+        showAnswerBtnLevel2.addEventListener('click', () => showAnswer(2));
+        nextBtnLevel1.addEventListener('click', loadLevel1);
+        nextBtnLevel2.addEventListener('click', loadLevel2);
+        
+        // Initial state
+        window.onload = () => selectLevel(1);
+    </script>
+</body>
+</html>
