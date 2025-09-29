@@ -1,0 +1,446 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Scramble Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+            /* Light Mode Background - Rainbow Gradient */
+            background: linear-gradient(135deg, #FF6F61, #FFD166, #9EF4A6, #80E9FF, #A6A8FF, #D183FF);
+            background-size: 400% 400%;
+            animation: rainbow-animation 15s ease infinite;
+            transition: background 0.5s ease;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #1c2134, #2c324b, #3b4260);
+            background-size: 400% 400%;
+        }
+
+        @keyframes rainbow-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            max-width: 500px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            transition: background 0.5s ease;
+        }
+
+        body.dark-mode .game-container {
+            background: rgba(45, 53, 75, 0.9);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 2.5rem;
+            font-weight: bold;
+            /* Rainbow Text */
+            background: linear-gradient(to right, #FF6F61, #FFD166, #80E9FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 0.5s ease;
+        }
+
+        body.dark-mode h1 {
+            background: linear-gradient(to right, #63b3ed, #70a1ff, #a6a8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #scrambled-word {
+            font-size: 3rem;
+            font-weight: bold;
+            letter-spacing: 5px;
+            padding: 10px;
+            border-radius: 10px;
+            /* Another Rainbow Text */
+            background: linear-gradient(to right, #D183FF, #A6A8FF, #9EF4A6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 0.5s ease;
+        }
+
+        body.dark-mode #scrambled-word {
+            background: linear-gradient(to right, #8b5cf6, #d183ff, #a6a8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .options-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        #next-word-button {
+            background: linear-gradient(45deg, #4299e1, #63b3ed);
+            width: 50%;
+            display: none;
+        }
+
+        body.dark-mode #next-word-button {
+            background: linear-gradient(45deg, #63b3ed, #4299e1);
+        }
+
+        #show-options-button {
+            background: linear-gradient(45deg, #9955e1, #a6a8ff);
+            width: 50%;
+        }
+        
+        body.dark-mode #show-options-button {
+            background: linear-gradient(45deg, #a6a8ff, #9955e1);
+        }
+
+        .option-button {
+            background: linear-gradient(45deg, #38a169, #48bb78);
+        }
+        
+        body.dark-mode .option-button {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+        }
+
+        /* New CSS classes for color feedback */
+        .option-button.correct-guess {
+            background: #48bb78; /* Solid green for correct answer */
+            box-shadow: 0 0 10px #48bb78;
+        }
+
+        .option-button.incorrect-guess {
+            background: #e53e3e; /* Solid red for incorrect guess */
+            box-shadow: 0 0 10px #e53e3e;
+        }
+
+        .option-button.correct-highlight {
+            background: #f6e05e; /* Solid yellow for correct highlight */
+            box-shadow: 0 0 10px #f6e05e;
+            color: #333;
+        }
+
+        .level-button {
+            background: linear-gradient(45deg, #2c5298, #4c78a9);
+            width: 100%;
+        }
+
+        body.dark-mode .level-button {
+            background: linear-gradient(45deg, #4c78a9, #2c5298);
+        }
+
+        #score-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4a5568;
+            transition: color 0.5s ease;
+        }
+
+        body.dark-mode #score-display {
+            color: #d1d5db;
+        }
+
+        #message-box {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 1.25rem;
+            color: #333;
+            transition: all 0.5s ease;
+        }
+
+        body.dark-mode #message-box {
+            background: #2a3045;
+            color: #d1d5db;
+        }
+
+        #game-screen {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #theme-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.75rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+        }
+
+        #theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            #scrambled-word {
+                font-size: 2rem;
+            }
+            .options-group {
+                grid-template-columns: 1fr;
+            }
+            #next-word-button,
+            #show-options-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <button id="theme-toggle">☀️</button>
+    
+    <div id="start-screen">
+        <h1>Word Scramble I</h1>
+        <div id="message-box">Choose a difficulty level to begin.</div>
+        <div class="button-group">
+            <button id="beginner-button" class="level-button">Beginner</button>
+            <button id="intermediate-button" class="level-button">Intermediate</button>
+        </div>
+    </div>
+
+    <div id="game-screen">
+        <h1>Word Scramble I</h1>
+        <div id="scrambled-word"></div>
+        <div id="message-box"></div>
+        <div class="button-group">
+            <button id="show-options-button">Show Options</button>
+        </div>
+        <div class="options-group hidden">
+            <button class="option-button"></button>
+            <button class="option-button"></button>
+            <button class="option-button"></button>
+            <button class="option-button"></button>
+        </div>
+        <div class="button-group">
+            <div id="next-word-message" style="display: none; font-size: 1.2rem; font-weight: bold;"></div>
+            <button id="next-word-button">Next Word</button>
+        </div>
+        <div id="score-display">Score: 0</div>
+    </div>
+</div>
+
+<script>
+    // Word lists for different difficulty levels
+    const wordLists = {
+        beginner: [
+            "able", "acid", "across", "actor", "adapt", "admit", "adopt", "adult", "after", "again", "agent", "agree", "ahead", "alarm", "album", "alert", "alike", "alive", "allow", "alone", "along", "alter", "among", "anger", "angle", "angry", "apple", "apply", "arena", "argue", "arise", "array", "arrow", "aside", "asset", "audio", "avoid", "award", "aware", "badge", "bake", "ball", "band", "bank", "bare", "bargain", "bark", "barn", "base", "basic", "basis", "beam", "bear", "beat", "become", "beef", "begin", "being", "bell", "belong", "belt", "bench", "bend", "benefit", "best", "bet", "better", "between", "beyond", "bid", "big", "bike", "bill", "bird", "birth", "bit", "bite", "bitter", "black", "blade", "blame", "blank", "blast", "blend", "blind", "block", "blood", "blow", "blue", "board", "boat", "body", "boil", "bold", "bolt", "bomb", "bond", "bone", "book", "boom", "boost", "boot", "border", "bore", "born", "borrow", "boss", "both", "bottle", "bottom", "bounce", "bound", "bow", "bowl", "box", "boy", "brain", "brand", "brave", "bread", "break", "breath", "breed", "brick", "bride", "bridge", "brief", "bright", "bring", "broad", "broken", "brother", "brown", "brush", "budget", "build", "bulk", "burn", "burst", "busy", "butter", "button", "buy", "buyer", "cable", "cake", "call", "calm", "camera", "camp", "can", "candle", "candy", "cap", "capital", "car", "card", "care", "career", "carpet", "carry", "case", "cash", "cast", "catch", "cause", "ceiling", "cell", "center", "chain", "chair", "chance", "change", "charge", "chart", "chase", "cheap", "check", "cheek", "cheese", "chest", "chief", "child", "chip", "choice", "choose", "church", "circle", "city", "claim", "clap", "class", "clean", "clear", "clerk", "click", "client", "climb", "clock", "close", "cloth", "cloud", "club", "clue", "coach", "coal", "coast", "coat", "code", "coffee", "coin", "cold", "collar", "collect", "color", "column", "combine", "come", "comfort", "command", "common", "company", "compare", "compete", "complain", "complete", "computer", "concern", "confirm", "connect", "consider", "contact", "continue", "control", "cook", "cool", "copy", "core", "corner", "cost", "cotton", "couch", "could", "count", "country", "couple", "course", "court", "cover", "cow", "crack", "craft", "crash", "crazy", "cream", "create", "credit", "crew", "crime", "crop", "cross", "crowd", "cry", "culture", "cup", "curtain", "curve", "custom", "cut", "cycle", "daily", "dance", "danger", "dark", "data", "date", "daughter", "day", "dead", "deal", "dear", "death", "debate", "debt", "decide", "deep", "degree", "delay", "deliver", "demand", "depend", "describe", "design", "detail", "develop", "die", "diet", "differ", "digital", "dinner", "direct", "dirt", "discover", "discuss", "disease", "dish", "display", "distance", "divide", "doctor", "document", "dog", "door", "double", "doubt", "down", "dozen", "draft", "drag", "drama", "draw", "dream", "dress", "drink", "drive", "drop", "dry", "due", "during", "dust", "duty", "each", "ear", "early", "earn", "earth", "east", "easy", "eat", "edge", "effect", "egg", "eight", "either", "elder", "elect", "electric", "else", "employ", "empty", "end", "energy", "engine", "enjoy", "enough", "enter", "entire", "entry", "equal", "error", "escape", "even", "event", "ever", "every", "exact", "example", "except", "exchange", "excite", "excuse", "exercise", "exist", "expect", "expense", "experience", "explain", "express", "extra", "eye", "face", "fact", "fail", "fair", "faith", "fall", "false", "family", "famous", "far", "farm", "fast", "fat", "father", "fault", "fear", "feed", "feel", "female", "few", "field", "fight", "figure", "file", "fill", "film", "final", "find", "fine", "finger", "finish", "fire", "firm", "first", "fish", "fit", "five", "fix", "flag", "flash", "flat", "flight", "floor", "flow", "flower", "fly", "focus", "fold", "follow", "food", "foot", "for", "force", "foreign", "forest", "forget", "fork", "form", "formal", "former", "forward", "four", "frame", "free", "freedom", "fresh", "friend", "from", "front", "fruit", "fuel", "full", "fun", "function", "fund", "funny", "future", "game", "garden", "gas", "gate", "gather", "general", "gentle", "get", "gift", "girl", "give", "glass", "glove", "go", "goal", "god", "gold", "good", "government", "grab", "grade", "grand", "grass", "grave", "great", "green", "ground", "group", "grow", "growth", "guard", "guess", "guest", "guide", "guitar", "gun", "hair", "half", "hall", "hand", "handle", "hang", "happen", "happy", "hard", "harm", "hat", "hate", "have", "head", "health", "hear", "heart", "heat", "heavy", "hell", "help", "here", "hero", "hide", "high", "hill", "history", "hit", "hold", "hole", "holiday", "home", "honest", "hope", "horse", "hospital", "hot", "hotel", "hour", "house", "how", "huge", "human", "hundred", "hungry", "hunt", "hurry", "hurt", "husband", "ice", "idea", "image", "imagine", "impact", "important", "improve", "include", "income", "increase", "indeed", "industry", "inform", "inside", "instead", "interest", "into", "introduce", "invest", "invite", "iron", "island", "issue", "item", "jacket", "job", "join", "joke", "judge", "jump", "just", "keep", "key", "kick", "kid", "kill", "kind", "king", "kitchen", "knee", "knife", "know", "knowledge", "lab", "lady", "land", "language", "large", "last", "late", "laugh", "law", "lawyer", "lay", "lead", "leader", "learn", "least", "leave", "left", "leg", "legal", "lend", "length", "less", "lesson", "let", "letter", "level", "lie", "life", "lift", "light", "like", "limit", "line", "link", "list", "listen", "little", "live", "load", "loan", "local", "lock", "long", "look", "lose", "loss", "lot", "love", "low", "luck", "lunch", "machine", "magic", "main", "major", "make", "man", "manage", "manner", "many", "map", "mark", "market", "marry", "master", "match", "material", "matter", "may", "maybe", "meal", "mean", "measure", "media", "medical", "meet", "member", "memory", "mention", "menu", "mere", "message", "method", "middle", "might", "mile", "milk", "mind", "minute", "miss", "mix", "model", "modern", "moment", "money", "month", "more", "morning", "most", "mother", "motion", "mountain", "mouth", "move", "movie", "much", "music", "must", "name", "narrow", "nation", "nature", "near", "neat", "necessary", "neck", "need", "neighbor", "neither", "nerve", "net", "never", "new", "news", "next", "nice", "night", "nine", "no", "none", "nor", "north", "nose", "not", "note", "notice", "now", "number", "nurse", "object", "obvious", "occasion", "offer", "office", "often", "oil", "okay", "old", "once", "one", "only", "open", "operate", "opinion", "opportunity", "order", "other", "our", "out", "outside", "over", "own", "owner", "page", "paint", "pair", "paper", "parent", "park", "part", "party", "pass", "past", "path", "patient", "pattern", "pay", "peace", "people", "per", "perform", "perhaps", "period", "person", "phone", "photo", "physical", "pick", "picture", "piece", "place", "plan", "plant", "play", "player", "please", "plenty", "pocket", "point", "police", "policy", "poor", "popular", "position", "possible", "power", "practice", "prepare", "present", "press", "pretty", "price", "pride", "prime", "principal", "principle", "print", "private", "prize", "problem", "process", "produce", "product", "program", "project", "proof", "property", "protect", "prove", "provide", "public", "pull", "purpose", "push", "put", "quality", "question", "quick", "quiet", "quite", "race", "radio", "rain", "raise", "range", "rate", "rather", "reach", "read", "ready", "real", "reality", "realize", "really", "reason", "receive", "recent", "record", "red", "reduce", "refer", "reflect", "region", "relate", "relationship", "relative", "relax", "release", "remain", "remember", "remove", "report", "represent", "require", "research", "resource", "respect", "respond", "rest", "result", "return", "reveal", "rich", "ride", "right", "ring", "rise", "risk", "river", "road", "rock", "role", "roll", "room", "rule", "run", "safe", "same", "save", "say", "scene", "school", "science", "score", "sea", "season", "seat", "second", "secret", "section", "see", "seek", "seem", "sell", "send", "sense", "series", "serious", "serve", "service", "set", "seven", "several", "shake", "shall", "shape", "share", "she", "sheet", "shift", "shine", "ship", "shoe", "shoot", "shop", "short", "shot", "should", "shoulder", "show", "side", "sign", "simple", "since", "sing", "single", "sister", "sit", "site", "situation", "six", "size", "skill", "skin", "small", "smile", "so", "social", "society", "soft", "soldier", "some", "son", "song", "soon", "sort", "sound", "source", "south", "space", "speak", "special", "specific", "spend", "sport", "spring", "staff", "stage", "stand", "standard", "star", "start", "state", "station", "stay", "step", "still", "stock", "stop", "store", "story", "strategy", "street", "strong", "structure", "student", "study", "stuff", "style", "subject", "success", "such", "sudden", "suggest", "summer", "support", "sure", "surface", "system", "table", "take", "talk", "task", "tax", "teach", "team", "tear", "technology", "tell", "ten", "tend", "term", "test", "than", "thank", "that", "the", "their", "them", "then", "theory", "there", "these", "they", "thing", "think", "third", "this", "those", "though", "thought", "three", "through", "throw", "thus", "time", "to", "today", "together", "tonight", "too", "top", "total", "tough", "toward", "town", "trade", "traditional", "train", "travel", "treat", "tree", "trial", "trip", "trouble", "true", "truth", "try", "turn", "two", "type", "under", "understand", "unit", "until", "up", "upon", "use", "usual", "value", "various", "very", "view", "visit", "voice", "vote", "wait", "walk", "wall", "want", "war", "watch", "water", "way", "we", "wealth", "wear", "week", "weight", "welcome", "well", "west", "what", "when", "where", "which", "while", "white", "who", "whole", "why", "wide", "wife", "will", "win", "wind", "window", "wish", "with", "within", "without", "woman", "wonder", "word", "work", "worker", "world", "worry", "would", "write", "writer", "wrong", "yard", "yeah", "year", "yes", "yet", "you", "young", "your"
+],
+        intermediate: ["verification", "versatile", "apple", "banana", "computer", "science", "elephant", "bicycle", "galaxy", "keyboard", "program", "bicycle", "adventure", "beautiful", "challenge", "develop", "science", "fantastic", "gardening", "happiness", "important", "knowledge", "landscape", "marketing", "nutrition", "optimistic", "patience", "questions", "restaurant", "seascape", "technology", "understand", "vibrating", "wonderful", "xylophone", "yesterday", "zealous", "abstract", "building", "courageous", "diversity", "excellent", "favorable", "generous", "hospital", "incredible", "journey", "kindness", "liberation", "marvelous", "naturally", "operating", "puzzling", "quizzical", "rejoicing", "serendipity", "transform", "universal", "vulnerable", "whispering", "xenophobe", "youthful", "zookeeper", "ambitious", "brilliant", "cooperate", "diligent", "effective", "flourish", "grateful", "harmonious", "illustrate", "jovially", "luminous", "magnificent", "necessary", "outstanding", "potential", "radiant", "splendid", "thoughtful", "unwavering", "vivacious", "whimsical", "xenial", "yielded", "zirconium", "abolished", "beneficial", "catalogue", "deference", "eloquent", "fortitude", "gregarious", "hesitantly", "impressive", "jealousy", "knowledgeable", "leisurely", "melodious", "notorious", "overjoyed", "perplexed", "quintessential", "resilience", "sanctuary", "tremendous", "unanimous", "venerable", "wholesome", "xanthic", "yonder", "zany", "absorbent", "bountiful", "celebrate", "delicious", "enormous", "fabulous", "glorious", "historical", "inevitable", "jubilant", "loquacious", "mischievous", "narrative", "obsolete", "picturesque", "quivering", "resplendent", "symmetrical", "teachable", "unassuming", "valorize", "victorious", "wonderful", "xenodochial", "yearning", "zestful", "abundance", "benefactor", "captivate", "dedicated", "energetic", "flamboyant", "glorious", "heritage", "illusion", "juxtapose", "kinetically", "legendary", "miraculous", "nurturing", "omnipotent", "palliative", "quintessence", "rebellious", "solicitude", "triumphantly", "unforgettable", "venerate", "wellspring", "xenial", "yearning", "zirconium", "acclaimed", "breathtaking", "consequential", "delightful", "elaborate", "fascinating", "garrulous", "hesitating", "impeccable", "jocularly", "lamentable", "meticulous", "noteworthy", "overwhelmed", "persuasive", "quizzical", "remarkable", "synthesis", "transcendent", "unwavering", "vibrating", "wholesome", "xenomorphic", "yearned", "zillionth", "accessible", "benevolent", "compelling", "diminutive", "enchanted", "fathomable", "generosity", "humanity", "immaculate", "jeopardize", "knowledgeable", "lethargic", "magnanimous", "negotiate", "optimistic", "passionate", "questioning", "resilient", "sentimental", "terrific", "unassuming", "versatile", "wholesome", "xenophobic", "youthfully", "zestfully", "abundant", "breathtaking", "congratulate", "delectable", "encompassing", "fantastic", "glimmering", "historical", "impressive", "judgmental", "knowledgeably", "luminous", "magnificent", "nebulous", "overwhelming", "picturesque", "quiescent", "relentless", "sanctimonious", "televise", "unwavering", "venerated", "whimsical", "xenial", "yesterday", "zestfully", "adventurous", "beautifully", "celebratory", "diligently", "effortlessly", "flourishing", "graciously", "harmonious", "illustrious", "jubilantly", "lamentably", "magnificently", "nourishing", "opportunistic", "perpetuate", "quizzically", "rejuvenate", "serene", "tenderness", "unfathomable", "victoriously", "wholesome", "xanthic", "yearned", "zany", "acclaimed", "brilliance", "conspicuous", "delectable", "ebullient", "frivolous", "gregarious", "hyperbole", "imagination", "jovial", "knowledgeable", "lavishly", "melancholy", "noteworthy", "obsequious", "perceptive", "quixotic", "rebellious", "sanguine", "telegraphed", "unwavering", "vacillating", "whimsical", "xenolithic", "yearned", "zillion", "achievable", "bounteous", "courageously", "dramatically", "egregious", "flawless", "gloriously", "hypothesis", "impeccable", "jubilantly", "languidly", "magnificently", "nefariously", "overwhelming", "perseverance", "quintessential", "rejuvenated", "serendipitously", "tenacious", "unquestionably", "vibrantly", "whimsical", "xanthous", "yearningly", "zirconium", "abandoned", "beneficial", "congratulations", "diminished", "eloquently", "fortuitous", "glorious", "hesitation", "imaginary", "jeopardizing", "knowledgeably", "lamentable", "magnificent", "necessity", "overwhelmingly", "perplexed", "quizzically", "reminiscent", "sentimental", "tremendously", "unanimously", "vulnerable", "whimsically", "xenolithic", "yearned", "zestful", "abominable", "bountifully", "captivating", "dilapidated", "efficiently", "fabulous", "gloriously", "historical", "imaginative", "jovially", "knowledgeable", "lamenting", "magnanimously", "necessary", "overjoyed", "persevering", "quizzical", "reminiscing", "sentimental", "terrific", "unassuming", "vibrating", "wholesome", "xenophobic", "youthfully", "zestful", "abandoned", "beneficial", "congratulations", "diminished", "eloquently", "fortuitous", "glorious", "hesitation", "imaginary", "jeopardizing", "knowledgeably", "lamentable", "magnificent", "necessity", "overwhelmingly", "perplexed", "quizzically", "reminiscent", "sentimental", "tremendously", "unanimously", "vulnerable", "whimsically", "xenolithic", "yearned", "zestful", "abominable", "bountifully", "captivating", "dilapidated", "efficiently", "fabulous", "gloriously", "historical", "imaginative", "jovially", "knowledgeable", "lamenting", "magnanimously", "necessary", "overjoyed", "persevering", "quizzical", "reminiscing", "sentimental", "terrific", "unassuming", "vibrating", "wholesome", "xenophobic", "youthfully", "zestful"
+        ]
+    };
+
+    let currentWord = "";
+    let score = 0;
+    let selectedWordList = [];
+
+    const startScreen = document.getElementById("start-screen");
+    const gameScreen = document.getElementById("game-screen");
+    const beginnerButton = document.getElementById("beginner-button");
+    const intermediateButton = document.getElementById("intermediate-button");
+
+    const scrambledWordDisplay = document.getElementById("scrambled-word");
+    const nextWordButton = document.getElementById("next-word-button");
+    const nextWordMessage = document.getElementById("next-word-message");
+    const scoreDisplay = document.getElementById("score-display");
+    const messageBox = document.getElementById("message-box");
+    const optionsGroup = document.querySelector(".options-group");
+    const optionButtons = document.querySelectorAll(".option-button");
+    const showOptionsButton = document.getElementById("show-options-button");
+    const themeToggle = document.getElementById("theme-toggle");
+
+    // Function to shuffle an array
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // Function to get a new word and set up the options
+    function getNewWord() {
+        // Pick a random word from the selected list
+        const randomIndex = Math.floor(Math.random() * selectedWordList.length);
+        currentWord = selectedWordList[randomIndex];
+
+        // Scramble the word
+        const scrambled = currentWord.split('').sort(() => 0.5 - Math.random()).join('');
+        scrambledWordDisplay.textContent = scrambled.toUpperCase();
+
+        // Find three other words for options
+        const otherWords = selectedWordList.filter(word => word !== currentWord);
+        const randomOptions = shuffleArray(otherWords).slice(0, 3);
+        const allOptions = shuffleArray([...randomOptions, currentWord]);
+
+        // Set the text for each option button and re-enable them
+        optionButtons.forEach((button, index) => {
+            button.textContent = allOptions[index];
+            button.disabled = false;
+            button.classList.remove('correct-guess', 'incorrect-guess', 'correct-highlight'); // Reset classes
+        });
+
+        // Hide options and show the "Show Options" button
+        optionsGroup.classList.add('hidden');
+        showOptionsButton.classList.remove('hidden');
+        showOptionsButton.style.display = 'block';
+
+        nextWordButton.style.display = 'none';
+        nextWordMessage.style.display = 'none';
+
+        messageBox.textContent = "Guess the word! Click below to see your options.";
+        messageBox.style.color = document.body.classList.contains('dark-mode') ? "#d1d5db" : "#333";
+    }
+
+    // Function to reveal the options
+    function showOptions() {
+        optionsGroup.classList.remove('hidden');
+        showOptionsButton.style.display = 'none';
+        messageBox.textContent = "Choose an option below.";
+        messageBox.style.color = document.body.classList.contains('dark-mode') ? "#d1d5db" : "#333";
+    }
+
+    // Function to check the user's guess
+    function checkGuess(event) {
+        if (event.target.disabled) return;
+
+        const userGuess = event.target.textContent;
+        const clickedButton = event.target;
+
+        // Hide the "Show Options" button after a guess is made
+        showOptionsButton.style.display = 'none';
+
+        if (userGuess === currentWord) {
+            score++;
+            scoreDisplay.textContent = "Score: " + score;
+            messageBox.textContent = "Correct!";
+            messageBox.style.color = "#38a169";
+
+            clickedButton.classList.add('correct-guess');
+            optionButtons.forEach(button => button.disabled = true);
+
+            // Show the "Correct Answer" message and the next button
+            nextWordMessage.textContent = "Correct Answer";
+            nextWordMessage.style.color = "#38a169";
+            nextWordMessage.style.display = 'block';
+            nextWordButton.style.display = 'block';
+
+        } else {
+            messageBox.textContent = ``; // Clear the "Try Again" message
+            messageBox.style.color = "#e53e3e";
+
+            // Highlight the incorrect guess in red
+            clickedButton.classList.add('incorrect-guess');
+
+            // Highlight the correct answer in yellow
+            optionButtons.forEach(button => {
+                if (button.textContent === currentWord) {
+                    button.classList.add('correct-highlight');
+                }
+                button.disabled = true; // Disable all buttons
+            });
+
+            // Show the "Incorrect Answer" message and the next button
+            nextWordMessage.textContent = "Incorrect Answer";
+            nextWordMessage.style.color = "#e53e3e";
+            nextWordMessage.style.display = 'block';
+            nextWordButton.style.display = 'block';
+        }
+    }
+
+    // Function to start the game with a selected difficulty
+    function selectDifficulty(level) {
+        selectedWordList = wordLists[level];
+        startScreen.style.display = 'none';
+        gameScreen.style.display = 'flex';
+        getNewWord();
+    }
+
+    // Function to toggle between light and dark mode
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        if (document.body.classList.contains('dark-mode')) {
+            themeToggle.textContent = "🌙";
+            // Re-apply correct initial message color for dark mode
+            if (messageBox.textContent.includes("Choose a difficulty") || messageBox.textContent.includes("Guess the word")) {
+                 messageBox.style.color = "#d1d5db";
+            }
+        } else {
+            themeToggle.textContent = "☀️";
+            // Re-apply correct initial message color for light mode
+            if (messageBox.textContent.includes("Choose a difficulty") || messageBox.textContent.includes("Guess the word")) {
+                 messageBox.style.color = "#333";
+            }
+        }
+    }
+
+    // Event listeners
+    beginnerButton.addEventListener("click", () => selectDifficulty("beginner"));
+    intermediateButton.addEventListener("click", () => selectDifficulty("intermediate"));
+    optionsGroup.addEventListener("click", checkGuess);
+    nextWordButton.addEventListener("click", getNewWord);
+    showOptionsButton.addEventListener("click", showOptions);
+    themeToggle.addEventListener("click", toggleTheme);
+</script>
+
+</body>
+</html>
