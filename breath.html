@@ -1,0 +1,421 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relaxing Breath Game</title>
+    <!-- Load Tailwind CSS for beautiful styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Tone.js for sound generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        /* Define the CSS variables for dynamic timing */
+        :root {
+            --inhale-duration: 4s;
+            --exhale-duration: 8s;
+        }
+
+        /* Define a soothing font and ensure the body fills the viewport */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            /* background-color is now handled by Tailwind gradient classes on the body tag */
+        }
+        
+        /* Custom CSS for the breathing circle animation */
+        .breathing-circle {
+            width: 150px;
+            height: 150px;
+            /* ELECTRIC CYAN GRADIENT: Modern and bright */
+            background: linear-gradient(135deg, #06b6d4, #22d3ee); 
+            border-radius: 50%;
+            /* Enhanced soft shadow matching the new cyan color */
+            box-shadow: 0 10px 30px rgba(34, 211, 238, 0.5); 
+            /* Use a variable for the transition time here for INHALE (grow) */
+            transition: transform var(--inhale-duration) ease-in-out, background-color 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0; /* Prevent shrinking on smaller screens */
+        }
+
+        /* Classes for the different states */
+        .grow {
+            transform: scale(2.5); /* Expands the circle significantly */
+            transition-duration: var(--inhale-duration); /* Inhale duration */
+        }
+        .shrink {
+            transform: scale(1); /* Shrinks the circle back to original size */
+            transition-duration: var(--exhale-duration); /* Exhale duration */
+        }
+    </style>
+</head>
+<!-- DEEP DARK BLUE BACKGROUND: bg-slate-950 -->
+<body class="flex items-center justify-center min-h-screen p-4 bg-slate-950">
+
+    <!-- SLIGHTLY LIGHTER DARK BLUE CONTAINER: bg-slate-900 -->
+    <div id="game-container" class="w-full max-w-lg bg-slate-900 p-8 md:p-10 rounded-[2rem] shadow-2xl xl:shadow-[0_20px_50px_rgba(0,0,0,0.3)] text-center">
+        
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-100 mb-2">Mindful Breathing</h1>
+        <p class="text-lg text-gray-300 mb-8">Follow the circle to relax your mind.</p>
+
+        <!-- ============================================== -->
+        <!-- 1. WELCOME SCREEN (The first page) -->
+        <!-- ============================================== -->
+        <div id="welcome-screen">
+            <!-- ACCENT TEXT: Electric Cyan -->
+            <h2 class="text-xl font-semibold text-cyan-400 mb-8">Ready to feel calm and focused?</h2>
+            
+            <!-- BUTTON: Strong Cyan -->
+            <button onclick="showSettings(); Tone.start()" class="w-full px-8 py-4 mt-4 rounded-xl text-white text-xl font-bold shadow-lg transition transform hover:scale-[1.02] active:scale-95 bg-cyan-600 hover:bg-cyan-700 shadow-cyan-400/50">
+                Begin Relaxation
+            </button>
+            <p class="text-sm text-gray-500 mt-4">Clicking 'Begin Relaxation' enables sound.</p>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- 2. SETTINGS SCREEN (Where user chooses timing) -->
+        <!-- ============================================== -->
+        <div id="settings-screen" class="hidden">
+            <!-- ACCENT TEXT: Electric Cyan -->
+            <h2 class="text-xl font-semibold text-cyan-400 mb-6">Choose Your Rhythm</h2>
+            
+            <div class="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                
+                <!-- DROPDOWN LABELS: Light Gray Text -->
+                <!-- INHALE DURATION -->
+                <div class="text-left">
+                    <label for="inhale-duration" class="block text-sm font-medium text-gray-300">Inhale (sec)</label>
+                    <select id="inhale-duration" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-700 bg-slate-800 text-gray-200 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm rounded-md">
+                        <option value="2">2 sec</option>
+                        <option value="3">3 sec</option>
+                        <option value="4" selected>4 sec</option>
+                        <option value="5">5 sec</option>
+                        <option value="6">6 sec</option>
+                        <option value="7">7 sec</option>
+                        <option value="8">8 sec</option>
+                    </select>
+                </div>
+                
+                <!-- HOLD DURATION -->
+                <div class="text-left">
+                    <label for="hold-duration" class="block text-sm font-medium text-gray-300">Hold (sec)</label>
+                    <select id="hold-duration" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-700 bg-slate-800 text-gray-200 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm rounded-md">
+                        <option value="0">0 sec (No Hold)</option>
+                        <option value="3">3 sec</option>
+                        <option value="4">4 sec</option>
+                        <option value="5">5 sec</option>
+                        <option value="6">6 sec</option>
+                        <option value="7" selected>7 sec</option>
+                        <option value="8">8 sec</option>
+                        <option value="9">9 sec</option>
+                        <option value="10">10 sec</option>
+                    </select>
+                </div>
+
+                <!-- EXHALE DURATION -->
+                <div class="text-left">
+                    <label for="exhale-duration" class="block text-sm font-medium text-gray-300">Exhale (sec)</label>
+                    <select id="exhale-duration" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-700 bg-slate-800 text-gray-200 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm rounded-md">
+                        <option value="4">4 sec</option>
+                        <option value="6">6 sec</option>
+                        <option value="8" selected>8 sec</option>
+                        <option value="10">10 sec</option>
+                        <option value="12">12 sec</option>
+                        <option value="15">15 sec</option>
+                        <option value="20">20 sec</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- BUTTON: Electric Cyan for "Start" action -->
+            <button id="start-button-settings" onclick="startGame()" class="px-8 py-3 mt-4 rounded-xl text-slate-900 font-semibold shadow-md transition transform hover:scale-105 active:scale-95 bg-cyan-400 hover:bg-cyan-500 shadow-cyan-400/50">
+                Start Breathing
+            </button>
+        </div>
+        
+        <!-- ============================================== -->
+        <!-- 3. GAME SCREEN (Where animation happens) -->
+        <!-- ============================================== -->
+        <div id="game-screen" class="hidden">
+            
+            <!-- Breathing Circle Area -->
+            <div class="flex justify-center items-center h-64 mb-10">
+                <div id="breathing-circle" class="breathing-circle">
+                    <span id="instruction-text" class="text-xl font-bold text-slate-900 shadow-sm transition-opacity duration-300"></span>
+                </div>
+            </div>
+
+            <!-- Timer and Round Count -->
+            <div class="flex justify-around text-lg font-medium text-gray-400 mb-8">
+                <!-- Count text updated to use Electric Cyan -->
+                <p>Round: <span id="cycle-count" class="text-cyan-400 font-bold">0</span> / 5</p>
+            </div>
+            
+            <!-- BUTTON: Keep Red for 'Stop' for clarity -->
+            <button id="stop-button" onclick="stopGame()" class="px-8 py-3 rounded-xl text-white font-semibold shadow-md transition transform hover:scale-105 active:scale-95 bg-red-600 hover:bg-red-700 shadow-red-500/50">
+                Stop & Edit Settings
+            </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- 4. FINISH SCREEN (New screen for completion) -->
+        <!-- ============================================== -->
+        <div id="finish-screen" class="hidden">
+            <!-- ACCENT TEXT: Electric Cyan -->
+            <h2 class="text-3xl font-bold text-cyan-400 mb-4">Session Complete! ??</h2>
+            <p id="finish-message" class="text-xl text-gray-300 mb-8">You successfully finished 5 rounds of mindful breathing.</p>
+            
+            <!-- BUTTON: Strong Cyan for return action -->
+            <button onclick="stopGame()" class="w-full px-8 py-4 mt-4 rounded-xl text-white text-xl font-bold shadow-lg transition transform hover:scale-[1.02] active:scale-95 bg-cyan-600 hover:bg-cyan-700 shadow-cyan-400/50">
+                Return to Edit Settings
+            </button>
+        </div>
+        
+        <!-- Message Box for Alerts (instead of using alert()) -->
+        <div id="message-box" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden items-center justify-center z-50">
+            <div class="bg-slate-800 p-6 rounded-lg shadow-2xl text-center max-w-sm">
+                <p id="message-content" class="text-lg font-medium text-gray-100 mb-4"></p>
+                <button onclick="hideMessage()" class="px-4 py-2 bg-cyan-500 text-slate-900 rounded-md hover:bg-cyan-600">Close</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Global variables and elements
+        let isRunning = false;
+        let timerId = null;
+        let cycle = 0; // Keeping the variable name 'cycle' in JS for simplicity, it tracks the 'round' count
+        const MAX_ROUNDS = 5; // Set the fixed goal of 5 rounds
+        
+        // --- Sound Setup (Tone.js) ---
+        // Create a simple, soft synth (sine wave for a calming tone)
+        const synth = new Tone.Synth({
+            oscillator: {
+                type: "sine"
+            },
+            envelope: {
+                attack: 0.5, // Slow attack for gentle entry
+                decay: 0.1,
+                sustain: 1,
+                release: 0.5 // Slow release for gentle fade out
+            }
+        }).toDestination();
+        
+        // Set volume low for background effect
+        synth.volume.value = -18; 
+
+        // Screen and Element references
+        const welcomeScreen = document.getElementById('welcome-screen'); // New reference
+        const settingsScreen = document.getElementById('settings-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const finishScreen = document.getElementById('finish-screen'); // Reference to the new finish screen
+        
+        const circle = document.getElementById('breathing-circle');
+        const instructionText = document.getElementById('instruction-text');
+        const cycleCountDisplay = document.getElementById('cycle-count');
+        const inhaleDurationSelect = document.getElementById('inhale-duration');
+        const holdDurationSelect = document.getElementById('hold-duration');
+        const exhaleDurationSelect = document.getElementById('exhale-duration');
+        
+        // Dynamic Times object to store user's selected durations in milliseconds
+        let dynamicTIMES = {
+            INHALE: 4000,
+            HOLD: 7000,
+            EXHALE: 8000
+        };
+
+
+        // Utility to show messages instead of using alert()
+        function showMessage(message) {
+            document.getElementById('message-content').textContent = message;
+            document.getElementById('message-box').classList.remove('hidden');
+            document.getElementById('message-box').classList.add('flex');
+        }
+
+        function hideMessage() {
+            document.getElementById('message-box').classList.add('hidden');
+            document.getElementById('message-box').classList.remove('flex');
+        }
+        
+        // --- Screen Management ---
+        function hideAllScreens() {
+            welcomeScreen.classList.add('hidden');
+            settingsScreen.classList.add('hidden');
+            gameScreen.classList.add('hidden');
+            finishScreen.classList.add('hidden'); // Hide the new screen
+        }
+
+        window.showWelcome = function() {
+             hideAllScreens();
+             welcomeScreen.classList.remove('hidden');
+        }
+
+        window.showSettings = function() {
+            hideAllScreens();
+            settingsScreen.classList.remove('hidden');
+        }
+
+        window.showGame = function() {
+            hideAllScreens();
+            gameScreen.classList.remove('hidden');
+        }
+
+        // New function to show the finish screen
+        window.showFinish = function() {
+            hideAllScreens();
+            finishScreen.classList.remove('hidden');
+        }
+
+        // --- Timing Update Function ---
+        function updateTiming() {
+            // Read values in seconds (from select element value attribute)
+            const inhaleDurationSeconds = parseInt(inhaleDurationSelect.value, 10);
+            const holdDurationSeconds = parseInt(holdDurationSelect.value, 10);
+            const exhaleDurationSeconds = parseInt(exhaleDurationSelect.value, 10); 
+
+            // Update JavaScript TIMES object (convert to milliseconds)
+            dynamicTIMES.INHALE = inhaleDurationSeconds * 1000;
+            dynamicTIMES.HOLD = holdDurationSeconds * 1000;
+            dynamicTIMES.EXHALE = exhaleDurationSeconds * 1000; 
+
+            // Update CSS variables for smooth transitions
+            const root = document.documentElement.style;
+            root.setProperty('--inhale-duration', `${dynamicTIMES.INHALE / 1000}s`);
+            root.setProperty('--exhale-duration', `${dynamicTIMES.EXHALE / 1000}s`);
+        }
+        
+        // --- Game Completion Function ---
+        function finishGame() {
+            // 1. Stop the game loop and sound
+            clearTimeout(timerId);
+            isRunning = false;
+            synth.triggerRelease(); // Ensure sound stops immediately
+
+            // Update finish screen text dynamically
+            document.getElementById('finish-message').innerHTML = `You successfully finished <strong>${MAX_ROUNDS}</strong> rounds of mindful breathing.`;
+
+            // 2. Switch to the finish screen
+            showFinish();
+        }
+
+        // --- Core Game Loop Functions ---
+
+        function nextPhase(phase) {
+            // Clear any previous timer
+            clearTimeout(timerId);
+
+            if (!isRunning) {
+                // If stopGame was called, exit the loop
+                instructionText.textContent = 'STOPPED';
+                circle.className = 'breathing-circle';
+                return;
+            }
+
+            switch (phase) {
+                case 'INHALE':
+                    // SOUND: Start a very low, long note for the duration of the inhale
+                    const inhaleSec = dynamicTIMES.INHALE / 1000;
+                    synth.triggerAttack('C3', Tone.now(), 0.5); // Play C3 (low note) softly
+                    instructionText.textContent = `BREATHE IN (${inhaleSec}s)`;
+                    circle.classList.remove('shrink');
+                    circle.classList.add('grow');
+                    // 2. Schedule next phase: HOLD
+                    timerId = setTimeout(() => nextPhase('HOLD'), dynamicTIMES.INHALE);
+                    break;
+
+                case 'HOLD':
+                    // SOUND: Stop the tone
+                    synth.triggerRelease();
+
+                    // Check if HOLD is 0 (no hold selected)
+                    if (dynamicTIMES.HOLD === 0) {
+                        nextPhase('EXHALE'); // Skip hold phase
+                        return; 
+                    }
+                    // 1. Visual update: Circle is large
+                    const holdSec = dynamicTIMES.HOLD / 1000;
+                    instructionText.textContent = `HOLD (${holdSec}s)`;
+                    // 2. Schedule next phase: EXHALE
+                    timerId = setTimeout(() => nextPhase('EXHALE'), dynamicTIMES.HOLD);
+                    break;
+
+                case 'EXHALE':
+                    // SOUND: Start a slightly different, low tone for the exhale
+                    const exhaleSec = dynamicTIMES.EXHALE / 1000;
+                    synth.triggerAttack('G2', Tone.now(), 0.5); // Play G2 (even lower note) softly
+                    instructionText.textContent = `BREATHE OUT (${exhaleSec}s)`;
+                    circle.classList.remove('grow');
+                    circle.classList.add('shrink');
+                    cycle++;
+                    cycleCountDisplay.textContent = cycle;
+                    
+                    if (cycle >= MAX_ROUNDS) { // Check for round completion
+                        timerId = setTimeout(() => {
+                            finishGame(); // Go to finish screen after exhale completes
+                        }, dynamicTIMES.EXHALE);
+                    } else {
+                        // 2. Schedule next phase: INHALE (Start of next cycle)
+                        timerId = setTimeout(() => {
+                            synth.triggerRelease(); // Release the exhale tone right before the next inhale
+                            nextPhase('INHALE');
+                        }, dynamicTIMES.EXHALE);
+                    }
+                    break;
+
+                default:
+                    // Initial state or unexpected state, start with INHALE
+                    nextPhase('INHALE');
+                    break;
+            }
+        }
+
+        window.startGame = function() {
+            if (isRunning) return;
+            
+            // 1. Read user settings and update global times
+            updateTiming();
+
+            // 2. Switch to the game screen
+            showGame();
+
+            // 3. Start the game loop
+            isRunning = true;
+            cycle = 0;
+            cycleCountDisplay.textContent = cycle;
+            
+            instructionText.textContent = 'GET READY...';
+            circle.className = 'breathing-circle'; // Reset circle size for starting
+
+            timerId = setTimeout(() => {
+                nextPhase('INHALE');
+            }, 3000); // 3-second countdown before starting
+        }
+
+        window.stopGame = function() {
+            // This function is used to stop the game and return to settings from either the Game Screen or the Finish Screen
+            
+            // 1. Stop the game loop and sound if it was running
+            clearTimeout(timerId);
+            isRunning = false;
+            synth.triggerRelease(); // Ensure sound stops immediately
+
+            // 2. Reset visual state (only needed if coming from game screen)
+            instructionText.textContent = 'Press Start';
+            circle.className = 'breathing-circle'; // Reset circle size
+
+            // 3. Switch back to settings screen
+            showSettings();
+        }
+
+        // Initial setup when the page loads
+        window.onload = function() {
+            updateTiming(); // Initialize dynamicTIMES and CSS variables with defaults
+            showWelcome(); // Start on the new welcome screen
+        }
+
+    </script>
+</body>
+</html>
