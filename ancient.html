@@ -1,0 +1,304 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyLore: Ancient Skywatchers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Orbitron', 'Arial', sans-serif;
+        }
+
+        body {
+            background: #000010;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .space-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 30%, rgba(45, 26, 75, 0.3) 0%, transparent 50%);
+        }
+
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(2px 2px at 20% 30%, #fff, transparent);
+            animation: twinkle 8s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, #9370db, #8a2be2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .era-title {
+            font-size: 2.5rem;
+            color: #9370db;
+            margin-bottom: 20px;
+        }
+
+        .quiz-screen {
+            background: rgba(45, 26, 75, 0.85);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 50px rgba(147, 112, 219, 0.3);
+            border: 1px solid rgba(147, 112, 219, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .question {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #e6f2ff;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            background: rgba(45, 26, 75, 0.6);
+            border: 1px solid rgba(147, 112, 219, 0.3);
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #b0d5fe;
+        }
+
+        .option:hover {
+            background: rgba(147, 112, 219, 0.2);
+            border-color: rgba(147, 112, 219, 0.6);
+        }
+
+        .option.selected {
+            background: rgba(147, 112, 219, 0.3);
+            border-color: rgba(147, 112, 219, 0.8);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #9370db, #8a2be2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(147, 112, 219, 0.4);
+        }
+
+        .results-screen {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .score-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #9370db;
+            margin: 20px 0;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="space-background">
+        <div class="stars"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">SkyLore</div>
+            <div class="era-title">Ancient Skywatchers</div>
+        </header>
+
+        <div class="quiz-screen" id="quizScreen">
+            <div class="question" id="question">Which ancient civilization built structures like Stonehenge that aligned with celestial events?</div>
+            
+            <div class="options" id="options">
+                <div class="option" data-index="0">Egyptians</div>
+                <div class="option" data-index="1">Mayans</div>
+                <div class="option" data-index="2">Celts</div>
+                <div class="option" data-index="3">Chinese</div>
+            </div>
+            
+            <div class="navigation">
+                <button class="btn" id="prevBtn">Previous</button>
+                <button class="btn" id="nextBtn">Next Question</button>
+            </div>
+        </div>
+
+        <div class="quiz-screen results-screen" id="resultsScreen" style="display: none;">
+            <h2>Your Score:</h2>
+            <div class="score-value" id="finalScore">0/5</div>
+            <button class="btn" id="restartBtn">Take Quiz Again</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "Which ancient civilization built structures like Stonehenge that aligned with celestial events?",
+                options: ["Egyptians", "Mayans", "Celts", "Chinese"],
+                correct: 2
+            },
+            {
+                question: "The Mayans were particularly skilled in predicting what celestial event?",
+                options: ["Solar eclipses", "Meteor showers", "Comet appearances", "Planetary alignments"],
+                correct: 0
+            },
+            {
+                question: "Which ancient Greek proposed a heliocentric model of the solar system?",
+                options: ["Aristotle", "Ptolemy", "Aristarchus", "Eratosthenes"],
+                correct: 2
+            },
+            {
+                question: "The Babylonians are credited with developing one of the first known:",
+                options: ["Telescopes", "Star catalogs", "Solar calendars", "Lunar calendars"],
+                correct: 1
+            },
+            {
+                question: "What did ancient Egyptians use to help predict the flooding of the Nile?",
+                options: ["Venus cycles", "The star Sirius", "Lunar phases", "Solar eclipses"],
+                correct: 1
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let userAnswers = new Array(questions.length).fill(null);
+
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const finalScore = document.getElementById('finalScore');
+        const quizScreen = document.getElementById('quizScreen');
+        const resultsScreen = document.getElementById('resultsScreen');
+        const restartBtn = document.getElementById('restartBtn');
+
+        function loadQuestion() {
+            const q = questions[currentQuestion];
+            questionElement.textContent = q.question;
+            
+            optionsElement.innerHTML = '';
+            q.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                if (userAnswers[currentQuestion] === index) {
+                    optionElement.classList.add('selected');
+                }
+                optionElement.textContent = option;
+                optionElement.setAttribute('data-index', index);
+                optionElement.addEventListener('click', () => selectOption(index));
+                optionsElement.appendChild(optionElement);
+            });
+
+            prevBtn.disabled = currentQuestion === 0;
+            nextBtn.textContent = currentQuestion === questions.length - 1 ? 'Finish Quiz' : 'Next Question';
+        }
+
+        function selectOption(index) {
+            userAnswers[currentQuestion] = index;
+            document.querySelectorAll('.option').forEach((opt, i) => {
+                opt.classList.toggle('selected', i === index);
+            });
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (userAnswers[currentQuestion] === null) {
+                alert('Please select an answer');
+                return;
+            }
+
+            if (userAnswers[currentQuestion] === questions[currentQuestion].correct) {
+                score++;
+            }
+
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                loadQuestion();
+            }
+        });
+
+        function showResults() {
+            quizScreen.style.display = 'none';
+            resultsScreen.style.display = 'block';
+            finalScore.textContent = `${score}/${questions.length}`;
+        }
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestion = 0;
+            score = 0;
+            userAnswers.fill(null);
+            quizScreen.style.display = 'block';
+            resultsScreen.style.display = 'none';
+            loadQuestion();
+        });
+
+        // Initialize
+        loadQuestion();
+    </script>
+</body>
+</html>
